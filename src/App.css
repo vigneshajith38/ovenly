@@ -1,0 +1,55 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: transparent;
+}
+
+.main-content {
+  flex: 1;
+}
+
+.section-title {
+  text-align: center;
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  color: var(--color-forest);
+  position: relative;
+}
+
+.section-title::after {
+  content: '♡';
+  color: var(--color-cookie-brown);
+  display: block;
+  font-family: var(--font-handwriting);
+  font-size: 2.5rem;
+  margin-top: 5px;
+  transform: rotate(-10deg);
+}
+
+.featured-section {
+  padding: 40px 0;
+}
+
+.why-us-section {
+  background-color: var(--color-pale-peach);
+  padding: 80px 20px;
+  text-align: center;
+  margin-top: 40px;
+  border-top: 2px dashed var(--color-cookie-brown);
+  border-bottom: 2px dashed var(--color-cookie-brown);
+}
+
+.why-us-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.why-us-content p {
+  font-family: var(--font-handwriting);
+  color: var(--color-dark-chocolate);
+  font-size: 1.8rem;
+  line-height: 1.6;
+}

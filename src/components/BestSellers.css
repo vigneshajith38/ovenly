@@ -1,0 +1,203 @@
+.bestsellers-section {
+  padding: 80px 20px;
+  background-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.bestsellers-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 60px;
+  position: relative;
+}
+
+.header-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.bs-subtitle {
+  font-size: 1.6rem;
+  color: var(--color-dark-chocolate);
+  transform: rotate(-3deg);
+  margin-bottom: 5px;
+}
+
+.bs-title {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  color: var(--color-forest);
+  margin: 0;
+  font-weight: 700;
+}
+
+.bs-underline {
+  width: 250px;
+  height: 10px;
+  margin-top: 5px;
+}
+
+.bs-underline svg {
+  width: 100%;
+  height: 100%;
+}
+
+.header-decor-left, .header-decor-right {
+  position: relative;
+  width: 80px;
+}
+
+.bs-doodle-sparkle {
+  width: 30px;
+  color: var(--color-caramel);
+  position: absolute;
+  top: -20px;
+  right: 0;
+  transform: rotate(15deg);
+}
+
+.bs-doodle-heart {
+  width: 25px;
+  color: var(--color-blush-pink);
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  transform: rotate(-15deg);
+}
+
+.bs-doodle-flower {
+  width: 35px;
+  color: var(--color-butter-yellow);
+  position: absolute;
+  bottom: -40px;
+  left: 30px;
+  transform: rotate(20deg);
+}
+
+.bestsellers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bs-card {
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 4px 6px 15px rgba(0,0,0,0.06);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.bs-card-image-wrapper {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  margin-bottom: 20px;
+}
+
+.bs-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.bs-card:hover .bs-card-image {
+  transform: scale(1.05);
+}
+
+.bs-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--color-warm-vanilla);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-dark-chocolate);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.star-icon {
+  color: var(--color-caramel);
+}
+
+.bs-card-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.bs-card-title {
+  font-family: var(--font-main);
+  font-size: 1.3rem;
+  color: var(--color-forest);
+  margin: 0 0 10px 0;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.bs-card-price {
+  font-family: var(--font-main);
+  font-size: 1.4rem;
+  color: var(--color-dark-chocolate);
+  font-weight: 600;
+  margin: 0 0 20px 0;
+}
+
+.bs-whatsapp-btn {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50px;
+  padding: 14px 0;
+  font-size: 1.05rem;
+  background-color: var(--color-forest);
+}
+
+.bs-whatsapp-btn:hover {
+  background-color: var(--color-dark-chocolate);
+}
+
+.bs-card-doodle {
+  position: absolute;
+  bottom: 80px;
+  right: 15px;
+  width: 25px;
+  color: var(--color-warm-vanilla);
+  opacity: 0.8;
+  transform: rotate(20deg);
+  pointer-events: none;
+}
+
+@media (max-width: 992px) {
+  .bestsellers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .bestsellers-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+  .bs-title {
+    font-size: 2.8rem;
+  }
+}

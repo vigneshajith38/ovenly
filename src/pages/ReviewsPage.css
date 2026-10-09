@@ -1,0 +1,510 @@
+/* Reviews Page - Pinterest Scrapbook Aesthetic */
+
+.reviews-page {
+  background-color: var(--color-warm-vanilla);
+  overflow-x: hidden;
+}
+
+/* Typography Overrides for this page */
+.handwritten {
+  font-family: var(--font-handwriting);
+  font-size: 1.5rem;
+  color: var(--color-dark-chocolate);
+  transform: rotate(-3deg);
+}
+
+/* Hero Section */
+.reviews-hero {
+  position: relative;
+  padding: 80px 20px 40px;
+  background-color: var(--color-cream-white);
+  overflow: hidden;
+}
+
+.hero-decorations {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.decor {
+  position: absolute;
+  color: var(--color-cookie-brown);
+  opacity: 0.8;
+}
+
+.sparkle-1 { top: 20%; left: 10%; width: 30px; }
+.heart-1 { top: 15%; right: 20%; width: 40px; color: var(--color-blush-pink); }
+.flower-1 { bottom: 30%; left: 25%; width: 35px; color: var(--color-caramel); }
+.star-1 { bottom: 20%; right: 15%; width: 25px; color: var(--color-butter-yellow); }
+.arrow-1 { top: 40%; right: 25%; width: 60px; color: var(--color-forest); }
+
+.hero-content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-center {
+  text-align: center;
+  flex: 1;
+  padding: 0 40px;
+  max-width: 800px;
+}
+
+.hero-center h1 {
+  font-family: var(--font-heading);
+  font-size: 4rem;
+  color: var(--color-forest);
+  margin-bottom: 20px;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
+.hero-subtitle {
+  font-family: var(--font-main);
+  font-size: 1.15rem;
+  color: var(--color-dark-chocolate);
+  margin-bottom: 35px;
+  opacity: 0.9;
+}
+
+.leave-love-btn {
+  background-color: var(--color-forest);
+  border-radius: 50px;
+  padding: 14px 32px;
+  font-family: var(--font-main);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.polaroid {
+  width: 260px;
+  background: white;
+  padding: 12px 12px 35px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+  position: relative;
+  display: none; /* hidden on small screens */
+}
+
+@media (min-width: 1024px) {
+  .polaroid { display: block; }
+}
+
+.polaroid-left { transform: rotate(-6deg); }
+.polaroid-right { transform: rotate(4deg); }
+
+.polaroid img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.polaroid .handwritten {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 1.3rem;
+  margin: 0;
+  transform: none;
+}
+
+.tape {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 80px;
+  height: 25px;
+  background: rgba(248, 220, 217, 0.7); /* blush pink tape */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+/* Summary Strip */
+.reviews-summary-strip {
+  padding: 0 20px;
+  margin-top: -30px; /* pull up over hero slightly */
+  position: relative;
+  z-index: 10;
+  margin-bottom: 60px;
+}
+
+.summary-panel {
+  background: var(--color-cream-white);
+  border: 1px solid var(--color-pale-peach);
+  border-radius: 20px;
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.summary-left, .summary-center, .summary-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-divider {
+  width: 1px;
+  height: 80px;
+  background: var(--color-pale-peach);
+  margin: 0 30px;
+}
+
+.rating-large {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--color-forest);
+  line-height: 1;
+}
+
+.review-count {
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  color: var(--color-dark-chocolate);
+  opacity: 0.7;
+}
+
+.rating-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 200px;
+  margin-bottom: 4px;
+}
+
+.star-label {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 25px;
+}
+
+.bar-track {
+  flex: 1;
+  height: 6px;
+  background: #eaeaea;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--color-forest);
+  border-radius: 3px;
+}
+
+.count-label {
+  font-size: 0.8rem;
+  width: 20px;
+  text-align: right;
+  color: #888;
+}
+
+.summary-right {
+  justify-content: center;
+}
+
+.summary-doodle {
+  width: 40px;
+  color: var(--color-blush-pink);
+  margin-bottom: 10px;
+}
+
+.summary-phrase {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+@media (max-width: 768px) {
+  .summary-panel {
+    flex-direction: column;
+    gap: 30px;
+  }
+  .summary-divider {
+    width: 100%;
+    height: 1px;
+    margin: 0;
+  }
+}
+
+/* Masonry Grid */
+.reviews-gallery {
+  padding: 0 20px 80px;
+}
+
+.masonry-grid {
+  display: flex;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.masonry-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .masonry-column:nth-child(4) { display: none; }
+}
+@media (max-width: 768px) {
+  .masonry-column:nth-child(3) { display: none; }
+}
+@media (max-width: 500px) {
+  .masonry-column:nth-child(2) { display: none; }
+}
+
+/* Scrapbook Card */
+.scrapbook-card {
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+  position: relative;
+  transition: transform 0.2s;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.scrapbook-card:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  z-index: 2;
+}
+
+/* Card Rotations */
+.rotate-1 { transform: rotate(-1.5deg); }
+.rotate-2 { transform: rotate(1deg); }
+.rotate-3 { transform: rotate(0deg); }
+
+.scrapbook-card:hover.rotate-1, 
+.scrapbook-card:hover.rotate-2, 
+.scrapbook-card:hover.rotate-3 {
+  transform: rotate(0deg) scale(1.02);
+}
+
+/* Themes */
+.theme-blush { background-color: var(--color-blush-pink); }
+.theme-peach { background-color: var(--color-pale-peach); }
+.theme-yellow { background-color: var(--color-butter-yellow); }
+.theme-sage { background-color: var(--color-sage-green); }
+.theme-vanilla { background-color: var(--color-cream-white); }
+
+.sticker-heart {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: white;
+  color: var(--color-caramel);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transform: rotate(15deg);
+  z-index: 10;
+}
+
+.card-photo {
+  margin: -10px -10px 15px -10px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-photo img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  display: block;
+}
+
+.card-decorative-phrase {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.card-decorative-phrase .handwritten {
+  font-size: 2rem;
+  color: var(--color-forest);
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review-text {
+  font-family: var(--font-main);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--color-dark-chocolate);
+  margin: 0;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 10px;
+  border-top: 1px dashed rgba(0,0,0,0.1);
+  padding-top: 12px;
+}
+
+.customer-name {
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.review-date {
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+/* Journal Form */
+.review-submission {
+  padding: 40px 20px 80px;
+}
+
+.journal-page {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--color-blush-pink);
+  border-radius: 20px;
+  padding: 50px;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
+.journal-binding {
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: 30px;
+  width: 2px;
+  background: rgba(0,0,0,0.05);
+  border-right: 1px solid rgba(255,255,255,0.5);
+}
+
+.journal-decorations {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.journal-doodle.heart { top: 30px; right: 40px; width: 40px; color: var(--color-caramel); }
+.journal-doodle.flower { bottom: 40px; left: 60px; width: 35px; color: var(--color-forest); }
+.journal-note { position: absolute; top: 60px; right: -80px; transform: rotate(15deg); width: 150px; }
+
+@media (max-width: 1024px) {
+  .journal-note { display: none; }
+}
+
+.journal-content {
+  position: relative;
+  z-index: 2;
+  margin-left: 20px; /* clear binding */
+}
+
+.journal-content h2 {
+  font-family: var(--font-heading);
+  font-size: 2.8rem;
+  color: var(--color-forest);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.journal-subtitle {
+  text-align: center;
+  font-size: 1.1rem;
+  margin-bottom: 40px;
+}
+
+.review-form {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form-group label {
+  font-family: var(--font-main);
+  color: var(--color-forest);
+  font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  background: var(--color-cream-white);
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 12px;
+  padding: 16px;
+  font-family: var(--font-main);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--color-forest);
+  box-shadow: 0 0 0 3px rgba(6, 75, 53, 0.1);
+}
+
+.file-label {
+  background: var(--color-cream-white);
+  border: 2px dashed rgba(0,0,0,0.1);
+}
+
+.checkbox-group label {
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.submit-btn {
+  background: var(--color-forest);
+  color: white;
+  border-radius: 50px;
+  padding: 18px;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.submit-btn:hover {
+  background: var(--color-dark-chocolate);
+}
+
+@media (max-width: 600px) {
+  .hero-center h1 { font-size: 2.5rem; }
+  .journal-page { padding: 30px 20px; }
+  .journal-binding { left: 15px; }
+  .journal-content { margin-left: 10px; }
+  .journal-content h2 { font-size: 2rem; }
+}

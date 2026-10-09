@@ -1,0 +1,145 @@
+.customer-love-section {
+  padding: 40px 20px 80px;
+  background-color: transparent;
+}
+
+.love-banner {
+  background-color: var(--color-sage-green); /* soft sage-green */
+  border-radius: 20px;
+  padding: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  box-shadow: 2px 5px 15px rgba(0,0,0,0.08);
+  border: 1px dashed rgba(6, 75, 53, 0.3);
+}
+
+.love-banner-left, .love-banner-right {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.love-polaroid {
+  width: 200px;
+  transform: rotate(-6deg);
+  margin-bottom: 20px;
+  box-shadow: 2px 4px 10px rgba(0,0,0,0.1);
+}
+
+.love-note-left {
+  font-size: 1.6rem;
+  color: var(--color-dark-chocolate);
+  transform: rotate(-3deg);
+  margin: 0;
+}
+
+.love-banner-center {
+  flex: 2;
+  text-align: center;
+  padding: 0 30px;
+}
+
+.love-banner-title {
+  font-family: var(--font-heading);
+  font-size: 3.2rem;
+  color: var(--color-forest);
+  margin: 0 0 30px 0;
+  line-height: 1.2;
+}
+
+.love-banner-btn {
+  background-color: var(--color-blush-pink);
+  color: var(--color-dark-chocolate);
+  border: none;
+  font-size: 1.2rem;
+  padding: 16px 36px;
+  border-radius: 50px;
+  box-shadow: 3px 4px 0px rgba(0,0,0,0.1);
+}
+
+.love-banner-btn:hover {
+  background-color: var(--color-pale-peach);
+  transform: translate(1px, 2px);
+  box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+}
+
+.love-doodles-cluster {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin-bottom: 10px;
+}
+
+.love-doodle-cupcake {
+  width: 100px;
+  color: var(--color-dark-chocolate);
+  position: absolute;
+  top: 20px;
+  left: 25px;
+  transform: rotate(5deg);
+}
+
+.love-doodle-heart-1 {
+  width: 30px;
+  color: var(--color-blush-pink);
+  position: absolute;
+  top: 0;
+  right: 10px;
+  transform: rotate(15deg);
+}
+
+.love-doodle-heart-2 {
+  width: 20px;
+  color: var(--color-forest);
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  transform: rotate(-20deg);
+}
+
+.love-doodle-flower {
+  width: 35px;
+  color: var(--color-butter-yellow);
+  position: absolute;
+  bottom: 0;
+  right: 15px;
+  transform: rotate(25deg);
+}
+
+.love-note-right {
+  font-size: 1.6rem;
+  color: var(--color-forest);
+  transform: rotate(5deg);
+  margin: 0;
+}
+
+@media (max-width: 992px) {
+  .love-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: 40px;
+  }
+  .love-banner-center {
+    order: -1;
+    padding: 0;
+  }
+  .love-polaroid {
+    width: 250px;
+  }
+}
+
+@media (max-width: 600px) {
+  .love-banner {
+    padding: 30px 20px;
+  }
+  .love-banner-title {
+    font-size: 2.5rem;
+  }
+  .love-polaroid {
+    width: 220px;
+  }
+}

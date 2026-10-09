@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+
+:root {
+  --color-warm-vanilla: #FFF7E8;
+  --color-forest: #064B35;
+  --color-blush-pink: #F8DCD9;
+  --color-pale-peach: #F7DFCE;
+  --color-butter-yellow: #FFE8A3;
+  --color-sage-green: #DCE6D1;
+  --color-caramel: #C58A24;
+  --color-cookie-brown: #A95D2A;
+  --color-dark-chocolate: #382018;
+  --color-cream-white: #FFFCF5;
+  
+  --color-cream: #F6F0DF; /* Keep for backwards compatibility */
+  --color-bg-light: #FFF7E8; /* Update to warm vanilla */
+  --color-dark-brown: #382018; /* Update to dark chocolate */
+
+  --font-main: 'Inter', sans-serif;
+  --font-heading: 'Playfair Display', serif;
+  --font-handwriting: 'Caveat', cursive;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-warm-vanilla);
+  background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><filter id="a"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23a)" opacity="0.04"/></svg>');
+  color: var(--color-forest);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: var(--font-main);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-forest);
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 3.5rem;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 2.5rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  color: var(--color-dark-brown);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: var(--color-forest);
+  color: var(--color-cream);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-dark-brown);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(19, 61, 48, 0.2);
+}
+
+.btn-secondary {
+  background-color: var(--color-caramel);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #c07a30;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(212, 141, 63, 0.2);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--color-forest);
+  color: var(--color-forest);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-forest);
+  color: var(--color-cream);
+}
+
+/* WhatsApp Button */
+.btn-whatsapp {
+  background-color: #25D366;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-whatsapp:hover {
+  background-color: #128C7E;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease forwards;
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 2.5rem; }
+  h2 { font-size: 2rem; }
+}
