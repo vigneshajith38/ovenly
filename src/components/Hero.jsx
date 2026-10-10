@@ -18,7 +18,7 @@ const Hero = () => {
           </div>
           <span className="hero-brand-name">OVENLY</span>
           <h1>
-            Baked with Love, <br/> Shared with Joy ♡
+            Sinfully delicious
           </h1>
           <p className="hero-subtitle">Small-batch cookies and artisanal cupcakes, made fresh every day in our kitchen to bring a little sweetness to yours.</p>
           <div className="hero-cta-container">
