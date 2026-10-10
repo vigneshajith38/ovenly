@@ -54,6 +54,9 @@ const AdminLayout = () => {
           <Link to="/admin/reviews" className={location.pathname === '/admin/reviews' ? 'active' : ''}>
             <Star size={20} /> Reviews
           </Link>
+          <Link to="/admin/gallery" className={location.pathname === '/admin/gallery' ? 'active' : ''}>
+            <LayoutDashboard size={20} /> Gallery
+          </Link>
         </nav>
         <div className="admin-footer">
           <button className="logout-btn" onClick={handleLogout}>

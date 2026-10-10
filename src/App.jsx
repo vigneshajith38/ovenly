@@ -10,6 +10,7 @@ import AdminLayout from './pages/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminReviews from './pages/admin/AdminReviews';
+import AdminGallery from './pages/admin/AdminGallery';
 import CategoryCards from './components/CategoryCards';
 import BestSellers from './components/BestSellers';
 import WhyChooseUs from './components/WhyChooseUs';
@@ -17,6 +18,7 @@ import CustomerLoveBanner from './components/CustomerLoveBanner';
 import { GlobalBackground } from './components/Doodles';
 import { CartProvider } from './context/CartContext';
 import CartDrawer from './components/CartDrawer';
+import GalleryPage from './pages/GalleryPage';
 import './App.css';
 
 function Home() {
@@ -46,6 +48,7 @@ function App() {
               <Route path="/shop" element={<Shop />} />
               <Route path="/reviews" element={<ReviewsPage />} />
               <Route path="/about" element={<AboutContact />} />
+              <Route path="/gallery" element={<GalleryPage />} />
               
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
@@ -53,6 +56,7 @@ function App() {
                 <Route index element={<Navigate to="/admin/products" replace />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="reviews" element={<AdminReviews />} />
+                <Route path="gallery" element={<AdminGallery />} />
               </Route>
             </Routes>
           </main>
