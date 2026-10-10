@@ -1,10 +1,21 @@
 import React from 'react';
 import './Hero.css';
+import { DoodleLeaf, DoodleStar, DoodleHeart, DoodleSparkle, DoodleCupcake } from './Doodles';
 
 const Hero = () => {
   return (
     <section className="hero">
       
+      {/* Mobile Doodles */}
+      <div className="hero-mobile-doodles mobile-only">
+        <DoodleLeaf className="hero-doodle hd-tl" />
+        <DoodleStar className="hero-doodle hd-tr" />
+        <DoodleHeart className="hero-doodle hd-cl" />
+        <DoodleCupcake className="hero-doodle hd-cr" />
+        <DoodleSparkle className="hero-doodle hd-bl" />
+        <DoodleLeaf className="hero-doodle hd-br" />
+      </div>
+
       <div className="hero-content-wrapper">
         <div className="polaroid polaroid-left hero-polaroid desktop-only">
           <div className="tape tape-sage"></div>
@@ -25,25 +36,11 @@ const Hero = () => {
             <div className="hero-cta">
               <a href="/shop" className="btn btn-primary hero-btn">Shop Treats</a>
             </div>
-            <span className="hero-cta-note handwritten">Treat yourself!</span>
+            <span className="hero-cta-note handwritten desktop-only">Treat yourself!</span>
           </div>
         </div>
 
         <div className="polaroid polaroid-right hero-polaroid desktop-only">
-          <div className="tape tape-blue"></div>
-          <img src="https://images.unsplash.com/photo-1557308536-ee471ef2c390?auto=format&fit=crop&q=80&w=800" alt="Fresh cupcakes" />
-          <p className="handwritten">Perfect for you!</p>
-        </div>
-      </div>
-      
-      {/* Mobile Polaroids */}
-      <div className="hero-mobile-polaroids mobile-only">
-        <div className="polaroid polaroid-left hero-polaroid">
-          <div className="tape tape-sage"></div>
-          <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=800" alt="Baking ingredients" />
-          <p className="handwritten">Made from scratch</p>
-        </div>
-        <div className="polaroid polaroid-right hero-polaroid">
           <div className="tape tape-blue"></div>
           <img src="https://images.unsplash.com/photo-1557308536-ee471ef2c390?auto=format&fit=crop&q=80&w=800" alt="Fresh cupcakes" />
           <p className="handwritten">Perfect for you!</p>

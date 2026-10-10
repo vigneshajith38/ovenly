@@ -8,7 +8,8 @@ import {
   CakeSlice, 
   ChefHat, 
   Gift, 
-  Croissant 
+  Croissant,
+  Leaf
 } from 'lucide-react';
 import './Doodles.css';
 
@@ -33,6 +34,7 @@ export const DoodleRollingPin = ({ className, style }) => <DoodleIcon Icon={Chef
 export const DoodleCroissant = ({ className, style }) => <DoodleIcon Icon={Croissant} className={className} style={style} />;
 export const DoodleOvenMitt = ({ className, style }) => <DoodleIcon Icon={ChefHat} className={className} style={style} />;
 export const DoodleBow = ({ className, style }) => <DoodleIcon Icon={Gift} className={className} style={style} />;
+export const DoodleLeaf = ({ className, style }) => <DoodleIcon Icon={Leaf} className={className} style={style} />;
 
 
 export const GlobalBackground = () => {
