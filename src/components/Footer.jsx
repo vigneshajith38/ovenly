@@ -59,7 +59,7 @@ const Footer = () => {
             <a href={`https://wa.me/${config.whatsappNumber}`} target="_blank" rel="noreferrer" aria-label="WhatsApp">
               <MessageCircle size={22} />
             </a>
-            <a href="https://instagram.com/ovenly_treats" target="_blank" rel="noreferrer" aria-label="Instagram">
+            <a href="https://www.instagram.com/ovenly_blr?srtk=MTB0cG9oMTFyODBi" target="_blank" rel="noreferrer" aria-label="Instagram">
               <InstagramIcon size={22} />
             </a>
             <a href="mailto:hello@ovenly.in" aria-label="Email">

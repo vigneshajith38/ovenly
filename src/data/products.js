@@ -47,6 +47,6 @@ export const products = [
 
 // Configuration
 export const config = {
-  whatsappNumber: '919876543210', // Replace with actual business WhatsApp number
+  whatsappNumber: '919916693919',
   businessName: 'Ovenly'
 };
