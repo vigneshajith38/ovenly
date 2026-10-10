@@ -6,7 +6,7 @@ const Hero = () => {
     <section className="hero">
       
       <div className="hero-content-wrapper">
-        <div className="polaroid polaroid-left hero-polaroid">
+        <div className="polaroid polaroid-left hero-polaroid desktop-only">
           <div className="tape tape-sage"></div>
           <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=800" alt="Baking ingredients" />
           <p className="handwritten">Made from scratch</p>
@@ -29,6 +29,20 @@ const Hero = () => {
           </div>
         </div>
 
+        <div className="polaroid polaroid-right hero-polaroid desktop-only">
+          <div className="tape tape-blue"></div>
+          <img src="https://images.unsplash.com/photo-1557308536-ee471ef2c390?auto=format&fit=crop&q=80&w=800" alt="Fresh cupcakes" />
+          <p className="handwritten">Perfect for you!</p>
+        </div>
+      </div>
+      
+      {/* Mobile Polaroids */}
+      <div className="hero-mobile-polaroids mobile-only">
+        <div className="polaroid polaroid-left hero-polaroid">
+          <div className="tape tape-sage"></div>
+          <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=800" alt="Baking ingredients" />
+          <p className="handwritten">Made from scratch</p>
+        </div>
         <div className="polaroid polaroid-right hero-polaroid">
           <div className="tape tape-blue"></div>
           <img src="https://images.unsplash.com/photo-1557308536-ee471ef2c390?auto=format&fit=crop&q=80&w=800" alt="Fresh cupcakes" />
