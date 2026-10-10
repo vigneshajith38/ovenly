@@ -5,6 +5,7 @@ import './Gallery.css';
 const GalleryPage = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     fetchGalleryImages();
@@ -36,6 +37,7 @@ const GalleryPage = () => {
       setImages(imagesWithUrls);
     } catch (error) {
       console.error('Error fetching gallery:', error);
+      setErrorMsg(error.message || 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -54,6 +56,8 @@ const GalleryPage = () => {
       <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>Loading gallery...</div>
+        ) : errorMsg ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'red' }}>Error loading gallery: {errorMsg}</div>
         ) : (
           <div className="gallery-grid">
             {images.length === 0 ? (
