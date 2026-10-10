@@ -24,7 +24,7 @@ const GalleryPage = () => {
 
       if (error) throw error;
       
-      const files = data.filter(file => file.name !== '.emptyFolderPlaceholder' && file.name !== 'gallery');
+      const files = (data || []).filter(file => file.name !== '.emptyFolderPlaceholder' && file.name !== 'gallery');
       
       const imagesWithUrls = files.map(file => {
         const { data: { publicUrl } } = supabase.storage

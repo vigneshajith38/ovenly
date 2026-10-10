@@ -268,13 +268,36 @@
 }
 
 @media (max-width: 1024px) {
-  .masonry-column:nth-child(4) { display: none; }
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
 }
-@media (max-width: 768px) {
-  .masonry-column:nth-child(3) { display: none; }
+
+@media (min-width: 1025px) {
+  .mobile-only { display: none !important; }
+  .desktop-only { display: flex !important; }
 }
-@media (max-width: 500px) {
-  .masonry-column:nth-child(2) { display: none; }
+
+/* Mobile Sliding Track */
+.mobile-sliding-track {
+  display: flex;
+  overflow-x: auto;
+  gap: 20px;
+  padding: 10px 0 30px;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-sliding-track::-webkit-scrollbar {
+  height: 6px;
+}
+.mobile-sliding-track::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.05);
+  border-radius: 10px;
+}
+.mobile-sliding-track::-webkit-scrollbar-thumb {
+  background: var(--color-cookie-brown);
+  border-radius: 10px;
 }
 
 /* Scrapbook Card */

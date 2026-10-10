@@ -279,54 +279,94 @@ const ReviewsPage = () => {
               <p>No reviews yet. Be the first to share your experience!</p>
             </div>
           ) : (
-            <div className="masonry-grid">
-              {[columns.col1, columns.col2, columns.col3, columns.col4].map((column, colIdx) => (
-                <div key={colIdx} className="masonry-column">
-                  {column.map((review, idx) => {
-                    const themeClass = cardThemes[(colIdx * column.length + idx) % cardThemes.length];
-                    const rotationClass = `rotate-${(idx % 3) + 1}`;
-                    
-                    return (
-                      <div 
-                        key={review.id} 
-                        className={`scrapbook-card ${themeClass} ${rotationClass}`}
-                        onClick={() => setSelectedReview({ ...review, themeClass })}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        {idx % 3 === 0 && <div className="sticker-heart">♡</div>}
-                        
-                        {review.photo_path && (
-                          <div className="card-photo">
-                            <img src={review.photo_path} alt="Review" />
-                          </div>
-                        )}
-                        
-                        {!review.photo_path && idx % 4 === 0 && (
-                          <div className="card-decorative-phrase">
-                            <p className="handwritten">So sweet!</p>
-                          </div>
-                        )}
-                        
-                        <div className="card-content">
-                          <div className="review-stars">
-                            {[1, 2, 3, 4, 5].map(star => (
-                              <Star key={star} size={14} fill={star <= review.rating ? "var(--color-caramel)" : "none"} stroke="var(--color-caramel)" />
-                            ))}
-                          </div>
+            <>
+              <div className="masonry-grid desktop-only">
+                {[columns.col1, columns.col2, columns.col3, columns.col4].map((column, colIdx) => (
+                  <div key={colIdx} className="masonry-column">
+                    {column.map((review, idx) => {
+                      const themeClass = cardThemes[(colIdx * column.length + idx) % cardThemes.length];
+                      const rotationClass = `rotate-${(idx % 3) + 1}`;
+                      
+                      return (
+                        <div 
+                          key={review.id} 
+                          className={`scrapbook-card ${themeClass} ${rotationClass}`}
+                          onClick={() => setSelectedReview({ ...review, themeClass })}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {idx % 3 === 0 && <div className="sticker-heart">♡</div>}
                           
-                          <p className="review-text" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{review.review_text}</p>
+                          {review.photo_path && (
+                            <div className="card-photo">
+                              <img src={review.photo_path} alt="Review" />
+                            </div>
+                          )}
                           
-                          <div className="card-footer">
-                            <span className="customer-name">{review.customer_name}</span>
-                            <span className="review-date">{new Date(review.created_at).toLocaleDateString()}</span>
+                          {!review.photo_path && idx % 4 === 0 && (
+                            <div className="card-decorative-phrase">
+                              <p className="handwritten">So sweet!</p>
+                            </div>
+                          )}
+                          
+                          <div className="card-content">
+                            <div className="review-stars">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <Star key={star} size={14} fill={star <= review.rating ? "var(--color-caramel)" : "none"} stroke="var(--color-caramel)" />
+                              ))}
+                            </div>
+                            
+                            <p className="review-text" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{review.review_text}</p>
+                            
+                            <div className="card-footer">
+                              <span className="customer-name">{review.customer_name}</span>
+                              <span className="review-date">{new Date(review.created_at).toLocaleDateString()}</span>
+                            </div>
                           </div>
                         </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
+              {/* Mobile Sliding Track */}
+              <div className="mobile-sliding-track mobile-only">
+                {reviews.map((review, idx) => {
+                  const themeClass = cardThemes[idx % cardThemes.length];
+                  return (
+                    <div 
+                      key={review.id} 
+                      className={`scrapbook-card ${themeClass}`}
+                      onClick={() => setSelectedReview({ ...review, themeClass })}
+                      style={{ cursor: 'pointer', minWidth: '280px', maxWidth: '300px', flex: '0 0 auto', scrollSnapAlign: 'start' }}
+                    >
+                      {idx % 3 === 0 && <div className="sticker-heart">♡</div>}
+                      
+                      {review.photo_path && (
+                        <div className="card-photo">
+                          <img src={review.photo_path} alt="Review" />
+                        </div>
+                      )}
+                      
+                      <div className="card-content">
+                        <div className="review-stars">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <Star key={star} size={14} fill={star <= review.rating ? "var(--color-caramel)" : "none"} stroke="var(--color-caramel)" />
+                          ))}
+                        </div>
+                        
+                        <p className="review-text" style={{ display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{review.review_text}</p>
+                        
+                        <div className="card-footer">
+                          <span className="customer-name">{review.customer_name}</span>
+                          <span className="review-date">{new Date(review.created_at).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </section>

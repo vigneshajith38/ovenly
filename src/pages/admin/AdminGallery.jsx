@@ -27,7 +27,7 @@ const AdminGallery = () => {
       if (error) throw error;
       
       // Filter out the empty folder placeholder if any
-      const files = data.filter(file => file.name !== '.emptyFolderPlaceholder' && file.name !== 'gallery');
+      const files = (data || []).filter(file => file.name !== '.emptyFolderPlaceholder' && file.name !== 'gallery');
       
       const imagesWithUrls = files.map(file => {
         const { data: { publicUrl } } = supabase.storage
