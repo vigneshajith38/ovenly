@@ -179,15 +179,17 @@
 
 .hero-doodle {
   position: absolute;
-  opacity: 0.7;
+  opacity: 0.8;
+  height: auto;
+  z-index: 10;
 }
 
-.hd-tl { top: 15%; left: 5%; width: 50px; color: var(--color-sage-green); transform: rotate(-15deg); }
-.hd-tr { top: 20%; right: 5%; width: 40px; color: var(--color-caramel); transform: rotate(20deg); }
-.hd-cl { top: 45%; left: -2%; width: 45px; color: var(--color-blush-pink); transform: rotate(10deg); }
-.hd-cr { top: 50%; right: 2%; width: 55px; color: var(--color-cookie-brown); transform: rotate(-25deg); }
-.hd-bl { bottom: 25%; left: 6%; width: 35px; color: var(--color-butter-yellow); transform: rotate(-10deg); }
-.hd-br { bottom: 30%; right: 4%; width: 60px; color: var(--color-sage-green); transform: rotate(15deg); }
+.hd-tl { top: 10%; left: 3%; width: 50px; color: var(--color-sage-green); transform: rotate(-15deg); }
+.hd-tr { top: 12%; right: 3%; width: 40px; color: var(--color-caramel); transform: rotate(20deg); }
+.hd-cl { top: 40%; left: -2%; width: 45px; color: var(--color-blush-pink); transform: rotate(10deg); }
+.hd-cr { top: 45%; right: 2%; width: 55px; color: var(--color-cookie-brown); transform: rotate(-25deg); }
+.hd-bl { bottom: 20%; left: 4%; width: 35px; color: var(--color-butter-yellow); transform: rotate(-10deg); }
+.hd-br { bottom: 22%; right: 2%; width: 60px; color: var(--color-sage-green); transform: rotate(15deg); }
 
 @media (max-width: 600px) {
   .hero-center h1 { font-size: 3rem; }
