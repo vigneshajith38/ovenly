@@ -1,10 +1,11 @@
-import React from 'react';
-import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Minus, Plus, ShoppingBag, CalendarClock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './CartDrawer.css';
 
 const CartDrawer = () => {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const [deliveryDate, setDeliveryDate] = useState('');
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
@@ -21,6 +22,11 @@ const CartDrawer = () => {
     });
     
     message += `%0A*Total: ₹${cartTotal}*`;
+    
+    if (deliveryDate) {
+      const formattedDate = new Date(deliveryDate).toLocaleString();
+      message += `%0A%0A*Requested Delivery/Pickup Time:*%0A${formattedDate}`;
+    }
     
     // Using user's requested number
     const whatsappUrl = `https://wa.me/919916693919?text=${message}`;
@@ -71,6 +77,18 @@ const CartDrawer = () => {
         
         {cart.length > 0 && (
           <div className="cart-footer">
+            <div className="cart-datetime-picker" style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--color-forest)', fontWeight: '500' }}>
+                <CalendarClock size={16} /> When do you want this?
+              </label>
+              <input 
+                type="datetime-local" 
+                value={deliveryDate}
+                onChange={(e) => setDeliveryDate(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'inherit' }}
+              />
+            </div>
+            
             <div className="cart-total">
               <span>Total:</span>
               <span>₹{cartTotal}</span>
