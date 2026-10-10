@@ -290,7 +290,7 @@ const ReviewsPage = () => {
                       <div 
                         key={review.id} 
                         className={`scrapbook-card ${themeClass} ${rotationClass}`}
-                        onClick={() => setSelectedReview(review)}
+                        onClick={() => setSelectedReview({ ...review, themeClass })}
                         style={{ cursor: 'pointer' }}
                       >
                         {idx % 3 === 0 && <div className="sticker-heart">♡</div>}
@@ -334,7 +334,7 @@ const ReviewsPage = () => {
       {/* Review Modal */}
       {selectedReview && (
         <div className="modal-backdrop" onClick={() => setSelectedReview(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className={`scrapbook-card theme-vanilla animate-fade-in`} style={{ maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', cursor: 'default', transform: 'none' }} onClick={e => e.stopPropagation()}>
+          <div className={`scrapbook-card ${selectedReview.themeClass || 'theme-vanilla'} animate-fade-in`} style={{ maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', cursor: 'default', transform: 'none' }} onClick={e => e.stopPropagation()}>
             <button 
               onClick={() => setSelectedReview(null)} 
               style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-dark-chocolate)' }}
