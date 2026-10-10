@@ -49,8 +49,8 @@ const AboutContact = () => {
               <InstagramIcon className="contact-icon" />
               <h3>Follow Us</h3>
               <p>See our latest bakes</p>
-              <a href="https://instagram.com/ovenly_treats" target="_blank" rel="noreferrer" className="contact-link">
-                @ovenly_treats
+              <a href="https://www.instagram.com/ovenly_blr?srtk=MTB0cG9oMTFyODBi" target="_blank" rel="noreferrer" className="contact-link">
+                @ovenly_blr
               </a>
             </div>
             
@@ -68,7 +68,7 @@ const AboutContact = () => {
               <h3>Location</h3>
               <p>Delivery available across</p>
               <span className="contact-link">
-                Mumbai, India
+                Bangalore, India
               </span>
             </div>
           </div>
