@@ -45,6 +45,16 @@ const ReviewsPage = () => {
 
   useEffect(() => {
     fetchReviews();
+    
+    // Check if we need to scroll to the review form
+    if (window.location.hash === '#write-review') {
+      setTimeout(() => {
+        const element = document.getElementById('write-review');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 500); // Wait for render
+    }
   }, []);
 
   const fetchReviews = async () => {
