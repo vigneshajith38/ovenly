@@ -42,6 +42,9 @@ const ReviewsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Modal state
+  const [selectedReview, setSelectedReview] = useState(null);
 
   useEffect(() => {
     fetchReviews();
@@ -284,7 +287,12 @@ const ReviewsPage = () => {
                     const rotationClass = `rotate-${(idx % 3) + 1}`;
                     
                     return (
-                      <div key={review.id} className={`scrapbook-card ${themeClass} ${rotationClass}`}>
+                      <div 
+                        key={review.id} 
+                        className={`scrapbook-card ${themeClass} ${rotationClass}`}
+                        onClick={() => setSelectedReview(review)}
+                        style={{ cursor: 'pointer' }}
+                      >
                         {idx % 3 === 0 && <div className="sticker-heart">♡</div>}
                         
                         {review.photo_path && (
@@ -306,7 +314,7 @@ const ReviewsPage = () => {
                             ))}
                           </div>
                           
-                          <p className="review-text">{review.review_text}</p>
+                          <p className="review-text" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{review.review_text}</p>
                           
                           <div className="card-footer">
                             <span className="customer-name">{review.customer_name}</span>
@@ -322,6 +330,43 @@ const ReviewsPage = () => {
           )}
         </div>
       </section>
+
+      {/* Review Modal */}
+      {selectedReview && (
+        <div className="modal-backdrop" onClick={() => setSelectedReview(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div className={`scrapbook-card theme-vanilla animate-fade-in`} style={{ maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', cursor: 'default', transform: 'none' }} onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setSelectedReview(null)} 
+              style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-dark-chocolate)' }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            
+            {selectedReview.photo_path && (
+              <div className="card-photo" style={{ marginTop: '20px' }}>
+                <img src={selectedReview.photo_path} alt="Review" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+              </div>
+            )}
+            
+            <div className="card-content" style={{ padding: '20px 10px' }}>
+              <div className="review-stars" style={{ marginBottom: '15px' }}>
+                {[1, 2, 3, 4, 5].map(star => (
+                  <Star key={star} size={20} fill={star <= selectedReview.rating ? "var(--color-caramel)" : "none"} stroke="var(--color-caramel)" />
+                ))}
+              </div>
+              
+              <p className="review-text" style={{ fontSize: '1.2rem', lineHeight: '1.6', color: 'var(--color-dark-chocolate)', marginBottom: '20px' }}>
+                {selectedReview.review_text}
+              </p>
+              
+              <div className="card-footer" style={{ borderTop: '1px solid rgba(0,0,0,0.1)', paddingTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="customer-name" style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--color-forest)' }}>{selectedReview.customer_name}</span>
+                <span className="review-date" style={{ color: 'var(--color-cookie-brown)' }}>{new Date(selectedReview.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Review Form - Journal Style */}
       <section id="write-review" className="review-submission">
