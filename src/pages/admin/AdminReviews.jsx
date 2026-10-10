@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Check, X, Trash2 } from 'lucide-react';
+import { Check, X, Trash2, Plus, Upload } from 'lucide-react';
 
 const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending'); // pending, approved, rejected
+  
+  // Upload state
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadName, setUploadName] = useState('Instagram Customer');
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchReviews();
@@ -62,10 +68,66 @@ const AdminReviews = () => {
     }
   };
 
+  const handleUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadFile) return alert('Please select an image file first.');
+    
+    setUploading(true);
+    try {
+      // 1. Upload image to Supabase Storage
+      const fileExt = uploadFile.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `screenshots/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('review-photos')
+        .upload(filePath, uploadFile);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('review-photos')
+        .getPublicUrl(filePath);
+        
+      // 2. Insert into reviews table as approved
+      const { error: insertError } = await supabase
+        .from('reviews')
+        .insert([{
+          customer_name: uploadName,
+          rating: 5,
+          review_text: 'Screenshot review uploaded by admin.',
+          photo_path: publicUrl,
+          status: 'approved',
+          approved_at: new Date().toISOString()
+        }]);
+        
+      if (insertError) throw insertError;
+      
+      alert('Screenshot uploaded successfully!');
+      setIsUploadModalOpen(false);
+      setUploadFile(null);
+      setUploadName('Instagram Customer');
+      
+      // Refresh if we are on approved tab
+      if (filter === 'approved') {
+        fetchReviews();
+      }
+    } catch (error) {
+      console.error('Error uploading screenshot:', error);
+      alert('Error uploading screenshot: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div>
       <div className="admin-header">
         <h1>Reviews Management</h1>
+        <button className="btn btn-primary" onClick={() => setIsUploadModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Upload size={18} /> Add Screenshot
+        </button>
       </div>
       
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
@@ -144,6 +206,56 @@ const AdminReviews = () => {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Upload Modal */}
+      {isUploadModalOpen && (
+        <div className="modal-overlay" onClick={() => !uploading && setIsUploadModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Upload Review Screenshot</h2>
+              <button className="close-btn" onClick={() => setIsUploadModalOpen(false)} disabled={uploading}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUploadSubmit} className="admin-form">
+              <div className="form-group">
+                <label>Customer Name or Source</label>
+                <input 
+                  type="text" 
+                  value={uploadName} 
+                  onChange={e => setUploadName(e.target.value)} 
+                  required 
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Screenshot Image</label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={e => setUploadFile(e.target.files[0])} 
+                  required 
+                />
+                {uploadFile && (
+                  <p style={{ marginTop: '10px', fontSize: '0.9rem', color: 'var(--color-cookie-brown)' }}>
+                    Selected: {uploadFile.name}
+                  </p>
+                )}
+              </div>
+              
+              <div className="form-actions" style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
+                <button type="button" className="btn btn-outline" onClick={() => setIsUploadModalOpen(false)} disabled={uploading}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={uploading || !uploadFile}>
+                  {uploading ? 'Uploading...' : 'Upload & Approve'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
