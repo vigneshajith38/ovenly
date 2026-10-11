@@ -24,6 +24,8 @@ const AdminProducts = () => {
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showSqlHelper, setShowSqlHelper] = useState(true);
+  const [copiedSql, setCopiedSql] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -130,27 +132,70 @@ const AdminProducts = () => {
         description,
         price: parseFloat(price),
         category,
-        dietary_type: dietaryType,
-        is_custom_assorted: isCustomAssorted,
-        assorted_capacity: parseInt(assortedCapacity, 10) || 6,
-        assorted_flavours: flavoursArray,
         is_published: isPublished,
         is_available: isAvailable,
         image_path
       };
 
+      if (isCustomAssorted) {
+        productData.is_custom_assorted = true;
+        productData.assorted_capacity = parseInt(assortedCapacity, 10) || 3;
+        productData.assorted_flavours = flavoursArray;
+      }
+
+      let saveError = null;
+
       if (currentProduct) {
-        const { error } = await supabase
+        const res = await supabase
           .from('products')
           .update(productData)
           .eq('id', currentProduct.id);
-        if (error) throw error;
+        saveError = res.error;
       } else {
-        const { error } = await supabase
+        const res = await supabase
           .from('products')
           .insert([productData]);
-        if (error) throw error;
+        saveError = res.error;
       }
+
+      // If Supabase table is missing the custom assorted columns
+      if (saveError && (saveError.message?.includes('assorted') || saveError.message?.includes('column') || saveError.message?.includes('schema cache'))) {
+        console.warn('Supabase missing assorted columns:', saveError.message);
+        setShowSqlHelper(true);
+
+        const saveBasic = window.confirm(
+          "⚠️ Your Supabase database is missing the 'assorted_capacity' column.\n\n" +
+          "Click OK to save your product photo, name & price right now!\n\n" +
+          "Then run the 1-click SQL in your Supabase SQL Editor (shown at top) to enable the custom tin feature."
+        );
+
+        if (saveBasic) {
+          const basicData = {
+            name,
+            description,
+            price: parseFloat(price),
+            category,
+            is_published: isPublished,
+            is_available: isAvailable,
+            image_path
+          };
+
+          const basicRes = currentProduct 
+            ? await supabase.from('products').update(basicData).eq('id', currentProduct.id)
+            : await supabase.from('products').insert([basicData]);
+
+          if (basicRes.error) throw basicRes.error;
+
+          alert("Product saved successfully! To turn on the custom assorted tin feature, run the quick SQL shown at the top of the Admin page in Supabase.");
+          await fetchProducts();
+          closeModal();
+          return;
+        } else {
+          return;
+        }
+      }
+
+      if (saveError) throw saveError;
 
       await fetchProducts();
       closeModal();
@@ -186,10 +231,74 @@ const AdminProducts = () => {
             Manage menu bakes, categories, and custom Assorted Tin options.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => openModal()}>
-          <Plus size={20} style={{ marginRight: '8px' }} /> Add Product
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            type="button"
+            className="btn btn-outline" 
+            style={{ fontSize: '0.85rem' }} 
+            onClick={() => setShowSqlHelper(!showSqlHelper)}
+          >
+            ⚡ Supabase SQL Setup
+          </button>
+          <button className="btn btn-primary" onClick={() => openModal()}>
+            <Plus size={20} style={{ marginRight: '8px' }} /> Add Product
+          </button>
+        </div>
       </div>
+
+      {showSqlHelper && (
+        <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h3 style={{ margin: '0 0 6px', color: '#92400e', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>⚡</span> Supabase Setup for Custom Assorted Tins
+              </h3>
+              <p style={{ margin: '0 0 10px', fontSize: '0.88rem', color: '#78350f' }}>
+                If you see <em>"Could not find the 'assorted_capacity' column"</em>, copy the SQL below, paste it into your <strong>Supabase SQL Editor</strong>, and click <strong>Run</strong>:
+              </p>
+            </div>
+            <button 
+              className="btn btn-outline" 
+              style={{ padding: '4px 10px', fontSize: '0.8rem', borderColor: '#d97706', color: '#92400e' }}
+              onClick={() => setShowSqlHelper(false)}
+            >
+              ✕ Hide
+            </button>
+          </div>
+          
+          <div>
+            <pre style={{ background: '#1e293b', color: '#f8fafc', padding: '12px', borderRadius: '8px', fontSize: '0.82rem', overflowX: 'auto', margin: '0 0 10px', whiteSpace: 'pre-wrap' }}>
+{`ALTER TABLE products 
+ADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,
+ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb;`}
+            </pre>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button 
+                type="button"
+                className="btn btn-primary" 
+                style={{ padding: '7px 16px', fontSize: '0.85rem' }}
+                onClick={() => {
+                  navigator.clipboard.writeText(`ALTER TABLE products \nADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,\nADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb;`);
+                  setCopiedSql(true);
+                  setTimeout(() => setCopiedSql(false), 2500);
+                }}
+              >
+                {copiedSql ? '✓ Copied SQL to Clipboard!' : '📋 Copy SQL to Clipboard'}
+              </button>
+              <a 
+                href="https://supabase.com/dashboard/project/nvonwgztqmpvxwkicajo/sql/new" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+                style={{ padding: '7px 16px', fontSize: '0.85rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                Open Supabase SQL Editor ➔
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="admin-table-container">
         <table className="admin-table">
