@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { X, Minus, Plus, ShoppingBag, CalendarClock, MapPin, Navigation, Truck, Store, CheckCircle2, AlertCircle } from 'lucide-react';
+import { 
+  X, Minus, Plus, ShoppingBag, CalendarClock, MapPin, 
+  Navigation, Truck, Store, CheckCircle2, AlertCircle, 
+  Crosshair, Loader2, ExternalLink, Check 
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './CartDrawer.css';
 
@@ -9,37 +13,94 @@ const CartDrawer = () => {
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [mapsLink, setMapsLink] = useState('');
+  const [shareOnWhatsApp, setShareOnWhatsApp] = useState(false);
   const [pickupNotes, setPickupNotes] = useState('');
   const [isLocating, setIsLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState(''); // 'success' | 'denied' | 'error' | 'unsupported' | ''
   const [formError, setFormError] = useState('');
 
-  const handleGetLocation = () => {
+  const handleGetLocation = async () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      setLocationStatus('unsupported');
       return;
     }
     
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setMapsLink(`https://maps.google.com/?q=${lat},${lng}`);
+    setLocationStatus('');
+    setFormError('');
+
+    const tryGetPosition = (enableHighAccuracy) => {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          reject,
+          {
+            enableHighAccuracy,
+            timeout: enableHighAccuracy ? 8000 : 7000,
+            maximumAge: 60000
+          }
+        );
+      });
+    };
+
+    let position = null;
+    try {
+      // 1. Try High accuracy GPS
+      position = await tryGetPosition(true);
+    } catch (err1) {
+      console.warn("High accuracy geolocation failed, trying low accuracy fallback...", err1);
+      if (err1.code === 1) { // PERMISSION_DENIED
         setIsLocating(false);
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-        alert("Unable to retrieve your location. You can paste a Google Maps link manually.");
-        setIsLocating(false);
+        setLocationStatus('denied');
+        return;
       }
-    );
+      try {
+        // 2. Try Low accuracy (Cell tower / WiFi)
+        position = await tryGetPosition(false);
+      } catch (err2) {
+        console.error("Low accuracy geolocation also failed:", err2);
+        setIsLocating(false);
+        if (err2.code === 1) {
+          setLocationStatus('denied');
+        } else {
+          setLocationStatus('error');
+        }
+        return;
+      }
+    }
+
+    if (position && position.coords) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const link = `https://maps.google.com/?q=${lat},${lng}`;
+      setMapsLink(link);
+      setShareOnWhatsApp(false);
+      setLocationStatus('success');
+      setIsLocating(false);
+
+      // Attempt reverse geocoding to auto-fill address if empty
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.display_name && !deliveryAddress.trim()) {
+            setDeliveryAddress(data.display_name);
+          }
+        }
+      } catch (fetchErr) {
+        console.warn("Reverse geocode silent error:", fetchErr);
+      }
+    } else {
+      setIsLocating(false);
+      setLocationStatus('error');
+    }
   };
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
 
-    if (orderType === 'porter' && !deliveryAddress.trim() && !mapsLink.trim()) {
-      setFormError('Please provide your delivery address or maps pin for Porter delivery.');
+    if (orderType === 'porter' && !deliveryAddress.trim() && !mapsLink.trim() && !shareOnWhatsApp) {
+      setFormError('Please enter your delivery address, use GPS, or select "Share location in WhatsApp".');
       return;
     }
     setFormError('');
@@ -69,6 +130,8 @@ const CartDrawer = () => {
       }
       if (mapsLink) {
         message += `*Maps Location:* ${encodeURIComponent(mapsLink)}%0A`;
+      } else if (shareOnWhatsApp) {
+        message += `*Maps Location:* 📍 Will share live location directly in WhatsApp chat%0A`;
       }
     } else {
       message += `*Fulfillment Method:* 🛍️ Self Pick up%0A`;
@@ -224,26 +287,94 @@ const CartDrawer = () => {
                     />
                   </div>
 
-                  <div className="cart-input-group">
-                    <label className="label-with-action">
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Navigation size={14} /> Maps Link (Optional)
+                  {/* Enhanced Location Section */}
+                  <div className="cart-location-box">
+                    <div className="location-box-header">
+                      <span className="location-box-title">
+                        <Navigation size={14} /> Pinpoint Location (For Porter Driver)
                       </span>
                       <button 
                         type="button"
                         onClick={handleGetLocation} 
                         disabled={isLocating}
-                        className="location-detect-btn"
+                        className={`location-detect-pill ${isLocating ? 'loading' : ''}`}
                       >
-                        {isLocating ? 'Locating...' : 'Use current location'}
+                        {isLocating ? (
+                          <>
+                            <Loader2 size={13} className="spin-icon" />
+                            <span>Locating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Crosshair size={13} />
+                            <span>Detect My Location</span>
+                          </>
+                        )}
                       </button>
-                    </label>
-                    <input 
-                      type="url" 
-                      placeholder="Paste Google Maps link"
-                      value={mapsLink}
-                      onChange={(e) => { setMapsLink(e.target.value); if(formError) setFormError(''); }}
-                    />
+                    </div>
+
+                    {/* Feedback states if GPS fails or succeeds */}
+                    {locationStatus === 'success' && (
+                      <div className="location-feedback success animate-fade-in">
+                        <Check size={14} /> <span>Location captured successfully!</span>
+                      </div>
+                    )}
+
+                    {(locationStatus === 'denied' || locationStatus === 'error' || locationStatus === 'unsupported') && (
+                      <div className="location-feedback warning animate-fade-in">
+                        <AlertCircle size={14} />
+                        <span>
+                          {locationStatus === 'denied' 
+                            ? 'Location access was blocked by your browser settings.' 
+                            : 'Could not fetch GPS location.'} You can use the option below!
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Google Maps link input */}
+                    <div className="maps-input-wrapper">
+                      <input 
+                        type="url" 
+                        placeholder="Google Maps link (auto-filled or paste)"
+                        value={mapsLink}
+                        onChange={(e) => { 
+                          setMapsLink(e.target.value); 
+                          if (e.target.value) setShareOnWhatsApp(false);
+                          if (formError) setFormError(''); 
+                        }}
+                      />
+                      <a 
+                        href="https://www.google.com/maps" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="open-maps-link"
+                        title="Open Google Maps to copy link"
+                      >
+                        <ExternalLink size={14} /> Maps
+                      </a>
+                    </div>
+
+                    {/* Super easy WhatsApp Location fallback */}
+                    <div 
+                      className={`wa-location-toggle ${shareOnWhatsApp ? 'active' : ''}`}
+                      onClick={() => {
+                        const next = !shareOnWhatsApp;
+                        setShareOnWhatsApp(next);
+                        if (next) {
+                          setMapsLink('');
+                          setLocationStatus('');
+                          if (formError) setFormError('');
+                        }
+                      }}
+                    >
+                      <div className="wa-checkbox">
+                        {shareOnWhatsApp ? <Check size={13} color="white" /> : null}
+                      </div>
+                      <div className="wa-location-text">
+                        <strong>I'll share my live location directly in WhatsApp chat</strong>
+                        <small>Easiest on phone: tap the paperclip/attachment icon in WhatsApp!</small>
+                      </div>
+                    </div>
                   </div>
                 </>
               ) : (

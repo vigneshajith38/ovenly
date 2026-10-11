@@ -339,6 +339,191 @@
   box-shadow: 0 0 0 3px rgba(6, 75, 53, 0.08);
 }
 
+/* Enhanced Location Box */
+.cart-location-box {
+  background: #fbfbf8;
+  border: 1.5px solid #eae6df;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.location-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.location-box-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-forest);
+}
+
+.location-detect-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-forest);
+  color: var(--color-warm-vanilla);
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(6, 75, 53, 0.15);
+}
+
+.location-detect-pill:hover {
+  background: var(--color-dark-chocolate);
+  transform: translateY(-1px);
+}
+
+.location-detect-pill.loading {
+  background: #888;
+  cursor: wait;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.location-feedback {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.location-feedback.success {
+  background: #edf7f0;
+  color: #1e5631;
+  border: 1px solid #cce8d4;
+}
+
+.location-feedback.warning {
+  background: #fffbe6;
+  color: #ad6800;
+  border: 1px solid #ffe58f;
+}
+
+.maps-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.maps-input-wrapper input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #ddd;
+  font-size: 0.85rem;
+  background: white;
+}
+
+.maps-input-wrapper input:focus {
+  outline: none;
+  border-color: var(--color-forest);
+}
+
+.open-maps-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  background: #f0f0f0;
+  color: #444;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.open-maps-link:hover {
+  background: #e2e2e2;
+  color: black;
+}
+
+/* WhatsApp Location Toggle Card */
+.wa-location-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f4faf6;
+  border: 1.5px solid #d4ebdc;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.wa-location-toggle:hover {
+  background: #eaf7ef;
+  border-color: #25D366;
+}
+
+.wa-location-toggle.active {
+  background: #e2f6e9;
+  border-color: #25D366;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.15);
+}
+
+.wa-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 2px solid #25D366;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.wa-location-toggle.active .wa-checkbox {
+  background: #25D366;
+}
+
+.wa-location-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.wa-location-text strong {
+  font-size: 0.82rem;
+  color: #128C7E;
+  line-height: 1.25;
+}
+
+.wa-location-text small {
+  font-size: 0.72rem;
+  color: #666;
+  margin-top: 2px;
+}
+
 /* Total Bar */
 .cart-total-bar {
   display: flex;
