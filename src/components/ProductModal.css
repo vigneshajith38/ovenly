@@ -168,10 +168,7 @@
   box-shadow: none !important;
 }
 
-/* Dietary Selector */
-.modal-dietary-box {
-  margin-bottom: 20px;
-}
+
 
 .modal-section-label {
   display: flex;
@@ -183,68 +180,7 @@
   margin-bottom: 8px;
 }
 
-.dietary-toggle-group {
-  display: flex;
-  gap: 10px;
-}
 
-.dietary-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1.5px solid #e0e0e0;
-  background: #fafafa;
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.dietary-btn:hover {
-  background: white;
-  border-color: #bbb;
-}
-
-.dietary-btn.active-eggless {
-  background: #f0fdf4;
-  border-color: #16a34a;
-  color: #15803d;
-  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
-}
-
-.dietary-btn.active-egg {
-  background: #fef2f2;
-  border-color: #dc2626;
-  color: #b91c1c;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
-}
-
-.dietary-static-pill span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.eggless-pill {
-  background: #f0fdf4;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-}
-
-.egg-pill {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-}
 
 /* Custom Assorted Tin Builder */
 .assorted-tin-builder {

@@ -14,7 +14,6 @@ const DEFAULT_ASSORTED_FLAVOURS = [
 
 const ProductModal = ({ product, onClose }) => {
   const [quantity, setQuantity] = useState(1);
-  const dietary = product.dietary_type || product.dietaryType || 'eggless';
   const isAssorted = product.is_custom_assorted || product.isCustomAssorted;
   const capacity = product.assorted_capacity || product.assortedCapacity || 6;
   
@@ -23,11 +22,6 @@ const ProductModal = ({ product, onClose }) => {
     product.assorted_flavours || 
     product.assortedFlavours || 
     DEFAULT_ASSORTED_FLAVOURS
-  );
-
-  // Dietary choice state (Eggless vs With Egg)
-  const [dietaryChoice, setDietaryChoice] = useState(
-    dietary === 'contains_egg' ? 'With Egg' : 'Eggless'
   );
 
   // Assorted Tin flavour breakdown state: { [flavour]: count }
@@ -74,9 +68,6 @@ const ProductModal = ({ product, onClose }) => {
   const handleOrder = () => {
     let finalOptions = '';
 
-    // Dietary prefix
-    const dietaryTag = dietaryChoice === 'Eggless' ? '🟢 100% Eggless' : '🔴 With Egg';
-
     if (isAssorted) {
       if (totalFlavoursSelected !== capacity) return;
       
@@ -84,16 +75,9 @@ const ProductModal = ({ product, onClose }) => {
         .filter(([_, count]) => count > 0)
         .map(([name, count]) => `${count}x ${name}`);
       
-      finalOptions = `${dietaryTag} • Assorted: ${chosenList.join(', ')}`;
+      finalOptions = `Custom Assorted (${capacity} pcs): ${chosenList.join(', ')}`;
     } else {
-      if (dietary === 'choice') {
-        finalOptions = selectedCustomisation 
-          ? `${dietaryTag} (${selectedCustomisation})`
-          : dietaryTag;
-      } else {
-        const fixedTag = dietary === 'eggless' ? '🟢 100% Eggless' : '🔴 With Egg';
-        finalOptions = selectedCustomisation ? `${fixedTag} • ${selectedCustomisation}` : fixedTag;
-      }
+      finalOptions = selectedCustomisation || '';
     }
 
     addToCart(product, quantity, finalOptions);
@@ -120,49 +104,16 @@ const ProductModal = ({ product, onClose }) => {
 
             <p className="modal-desc">{product.longDescription || product.description}</p>
             
-            {/* Dietary Selection (Egg vs Eggless) */}
-            <div className="modal-dietary-box">
-              <label className="modal-section-label">Dietary Preference:</label>
-              {dietary === 'choice' ? (
-                <div className="dietary-toggle-group">
-                  <button
-                    type="button"
-                    className={`dietary-btn ${dietaryChoice === 'Eggless' ? 'active-eggless' : ''}`}
-                    onClick={() => setDietaryChoice('Eggless')}
-                  >
-                    <span className="veg-badge-dot">🟢</span>
-                    <span>100% Eggless</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`dietary-btn ${dietaryChoice === 'With Egg' ? 'active-egg' : ''}`}
-                    onClick={() => setDietaryChoice('With Egg')}
-                  >
-                    <span className="nonveg-badge-dot">🔴</span>
-                    <span>Contains Egg</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="dietary-static-pill">
-                  {dietary === 'eggless' ? (
-                    <span className="eggless-pill">🟢 100% Eggless Recipe</span>
-                  ) : (
-                    <span className="egg-pill">🔴 Baked with Egg</span>
-                  )}
-                </div>
-              )}
-            </div>
-
             {/* Custom Assorted Tin Builder */}
             {isAssorted ? (
               <div className="assorted-tin-builder">
                 <div className="assorted-builder-header">
                   <div>
-                    <label className="modal-section-label" style={{ marginBottom: '2px' }}>
-                      <Sparkles size={16} /> Choose Any {capacity} Flavours
+                    <label className="modal-section-label" style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Sparkles size={16} color="var(--color-caramel)" /> Customize Your {capacity} Cookies
                     </label>
                     <span className="assorted-progress-text">
-                      {totalFlavoursSelected} of {capacity} cookies selected
+                      {totalFlavoursSelected} of {capacity} cookies chosen
                     </span>
                   </div>
                   <button type="button" onClick={applyBakersMix} className="btn-preset">
@@ -253,7 +204,7 @@ const ProductModal = ({ product, onClose }) => {
               <ShoppingBag size={20} />
               {isAssorted && totalFlavoursSelected < capacity
                 ? `Pick ${capacity - totalFlavoursSelected} more cookie${capacity - totalFlavoursSelected > 1 ? 's' : ''}`
-                : `Add to Cart • ₹${product.price * quantity}`}
+                : (isAssorted ? `Add Custom Tin to Cart • ₹${product.price * quantity}` : `Add to Cart • ₹${product.price * quantity}`)}
             </button>
           </div>
         </div>

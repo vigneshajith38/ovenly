@@ -45,7 +45,6 @@ const Shop = ({ featuredOnly = false }) => {
           ...p,
           image: p.image_path || p.image,
           available: p.is_available,
-          dietaryType: p.dietary_type || 'eggless',
           isCustomAssorted: p.is_custom_assorted,
           assortedCapacity: p.assorted_capacity || 6,
           assortedFlavours: p.assorted_flavours
@@ -66,10 +65,6 @@ const Shop = ({ featuredOnly = false }) => {
   const displayProducts = featuredOnly 
     ? dbProducts.slice(0, 3) 
     : dbProducts.filter(p => {
-        if (activeCategory === 'eggless') {
-          const d = p.dietary_type || p.dietaryType || 'eggless';
-          return d === 'eggless' || d === 'choice';
-        }
         if (activeCategory === 'assorted') {
           return p.is_custom_assorted || p.isCustomAssorted;
         }
@@ -93,6 +88,12 @@ const Shop = ({ featuredOnly = false }) => {
               All Treats
             </button>
             <button 
+              className={`filter-btn ${activeCategory === 'assorted' ? 'active' : ''}`}
+              onClick={() => setActiveCategory('assorted')}
+            >
+              ✨ Customize Your Own
+            </button>
+            <button 
               className={`filter-btn ${activeCategory === 'cookie-tins' ? 'active' : ''}`}
               onClick={() => setActiveCategory('cookie-tins')}
             >
@@ -103,18 +104,6 @@ const Shop = ({ featuredOnly = false }) => {
               onClick={() => setActiveCategory('cupcakes')}
             >
               Cupcakes
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === 'eggless' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('eggless')}
-            >
-              🟢 100% Eggless
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === 'assorted' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('assorted')}
-            >
-              ✨ Assorted Tins
             </button>
           </div>
         </>

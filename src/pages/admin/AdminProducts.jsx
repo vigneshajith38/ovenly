@@ -183,7 +183,7 @@ const AdminProducts = () => {
         <div>
           <h1>Products & Bakes</h1>
           <p style={{ color: '#666', fontSize: '0.9rem', margin: '4px 0 0' }}>
-            Manage menu bakes, Egg / Eggless dietary types, and custom Assorted Tins.
+            Manage menu bakes, categories, and custom Assorted Tin options.
           </p>
         </div>
         <button className="btn btn-primary" onClick={() => openModal()}>
@@ -197,7 +197,7 @@ const AdminProducts = () => {
             <tr>
               <th>Image</th>
               <th>Name</th>
-              <th>Dietary Type</th>
+              <th>Assorted Tin</th>
               <th>Price</th>
               <th>Status</th>
               <th>Availability</th>
@@ -223,20 +223,12 @@ const AdminProducts = () => {
                   )}
                 </td>
                 <td>
-                  {(!product.dietary_type || product.dietary_type === 'eggless') && (
-                    <span className="badge success" style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' }}>
-                      🟢 100% Eggless
+                  {product.is_custom_assorted ? (
+                    <span className="badge success" style={{ background: '#fdf4eb', color: 'var(--color-caramel)', border: '1px solid #fed7aa' }}>
+                      ✨ Custom Mix ({product.assorted_capacity || 6} pk)
                     </span>
-                  )}
-                  {product.dietary_type === 'contains_egg' && (
-                    <span className="badge error" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
-                      🔴 Contains Egg
-                    </span>
-                  )}
-                  {product.dietary_type === 'choice' && (
-                    <span className="badge warning" style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
-                      🔄 Eggless / Egg Choice
-                    </span>
+                  ) : (
+                    <span style={{ color: '#888', fontSize: '0.85rem' }}>Standard</span>
                   )}
                 </td>
                 <td>₹{product.price}</td>
@@ -308,22 +300,7 @@ const AdminProducts = () => {
                 </div>
               </div>
 
-              {/* Dietary Specification (Egg or Eggless) */}
-              <div className="form-group">
-                <label style={{ fontWeight: 'bold', color: 'var(--color-forest)' }}>Dietary Type (Egg / Eggless)</label>
-                <select 
-                  value={dietaryType} 
-                  onChange={e => setDietaryType(e.target.value)}
-                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1.5px solid #ddd', background: '#fafafa', fontWeight: '500' }}
-                >
-                  <option value="eggless">🟢 100% Eggless</option>
-                  <option value="contains_egg">🔴 Contains Egg</option>
-                  <option value="choice">🔄 Choice Available (Customer picks Eggless or With Egg)</option>
-                </select>
-                <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
-                  Informs customers whether this treat is purely eggless or if they can choose.
-                </small>
-              </div>
+
 
               {/* Custom Assorted Tin Configuration */}
               <div style={{ background: '#fcf8f2', border: '1px solid #f0e4d0', borderRadius: '12px', padding: '15px', marginBottom: '20px' }}>
