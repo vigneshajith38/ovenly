@@ -425,6 +425,13 @@
   border: 1px solid #ffe58f;
 }
 
+.location-feedback.info {
+  background: #f0f7f3;
+  color: var(--color-forest);
+  border: 1px solid #c8e6d2;
+  font-weight: 500;
+}
+
 .maps-input-wrapper {
   display: flex;
   gap: 8px;

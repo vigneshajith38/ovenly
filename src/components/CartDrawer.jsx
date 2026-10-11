@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   X, Minus, Plus, ShoppingBag, CalendarClock, MapPin, 
   Navigation, Truck, Store, CheckCircle2, AlertCircle, 
-  Crosshair, Loader2, ExternalLink, Check 
+  Crosshair, Loader2, ExternalLink, Check, Sparkles
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './CartDrawer.css';
@@ -16,17 +16,21 @@ const CartDrawer = () => {
   const [shareOnWhatsApp, setShareOnWhatsApp] = useState(false);
   const [pickupNotes, setPickupNotes] = useState('');
   const [isLocating, setIsLocating] = useState(false);
-  const [locationStatus, setLocationStatus] = useState(''); // 'success' | 'denied' | 'error' | 'unsupported' | ''
+  const [locationStatus, setLocationStatus] = useState(''); // 'success' | 'denied' | 'unavailable' | 'timeout' | ''
+  const [locationErrorDetail, setLocationErrorDetail] = useState('');
   const [formError, setFormError] = useState('');
 
   const handleGetLocation = async () => {
     if (!navigator.geolocation) {
       setLocationStatus('unsupported');
+      setLocationErrorDetail('Geolocation is not supported by your browser.');
+      setShareOnWhatsApp(true);
       return;
     }
     
     setIsLocating(true);
     setLocationStatus('');
+    setLocationErrorDetail('');
     setFormError('');
 
     const tryGetPosition = (enableHighAccuracy) => {
@@ -36,7 +40,7 @@ const CartDrawer = () => {
           reject,
           {
             enableHighAccuracy,
-            timeout: enableHighAccuracy ? 8000 : 7000,
+            timeout: enableHighAccuracy ? 7000 : 6000,
             maximumAge: 60000
           }
         );
@@ -44,30 +48,30 @@ const CartDrawer = () => {
     };
 
     let position = null;
+    let lastError = null;
+
     try {
-      // 1. Try High accuracy GPS
+      // 1. Try High accuracy GPS first
       position = await tryGetPosition(true);
     } catch (err1) {
-      console.warn("High accuracy geolocation failed, trying low accuracy fallback...", err1);
+      lastError = err1;
+      // If permission explicitly denied, don't bother retrying
       if (err1.code === 1) { // PERMISSION_DENIED
         setIsLocating(false);
         setLocationStatus('denied');
+        setLocationErrorDetail('Location permission was denied in your browser settings. Switched to WhatsApp sharing below!');
+        setShareOnWhatsApp(true);
         return;
       }
       try {
-        // 2. Try Low accuracy (Cell tower / WiFi)
+        // 2. Fall back to Cell tower / WiFi low accuracy
         position = await tryGetPosition(false);
       } catch (err2) {
-        console.error("Low accuracy geolocation also failed:", err2);
-        setIsLocating(false);
-        if (err2.code === 1) {
-          setLocationStatus('denied');
-        } else {
-          setLocationStatus('error');
-        }
-        return;
+        lastError = err2;
       }
     }
+
+    setIsLocating(false);
 
     if (position && position.coords) {
       const lat = position.coords.latitude;
@@ -76,7 +80,7 @@ const CartDrawer = () => {
       setMapsLink(link);
       setShareOnWhatsApp(false);
       setLocationStatus('success');
-      setIsLocating(false);
+      setLocationErrorDetail('');
 
       // Attempt reverse geocoding to auto-fill address if empty
       try {
@@ -91,16 +95,27 @@ const CartDrawer = () => {
         console.warn("Reverse geocode silent error:", fetchErr);
       }
     } else {
-      setIsLocating(false);
-      setLocationStatus('error');
+      // Graceful handling of why GPS failed on phone
+      if (lastError?.code === 1) {
+        setLocationStatus('denied');
+        setLocationErrorDetail('Browser location permission was not granted.');
+      } else if (lastError?.code === 2) {
+        setLocationStatus('unavailable');
+        setLocationErrorDetail("Phone GPS/Location is turned off in settings. Switched to WhatsApp live location below!");
+      } else {
+        setLocationStatus('timeout');
+        setLocationErrorDetail("GPS signal was too weak or timed out. Switched to WhatsApp live location below!");
+      }
+      // Automatically activate WhatsApp location sharing so customer is NEVER stuck!
+      setShareOnWhatsApp(true);
     }
   };
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
 
-    if (orderType === 'porter' && !deliveryAddress.trim() && !mapsLink.trim() && !shareOnWhatsApp) {
-      setFormError('Please enter your delivery address, use GPS, or select "Share location in WhatsApp".');
+    if (orderType === 'porter' && !deliveryAddress.trim()) {
+      setFormError('Please enter your delivery address (Flat / House No, Street, Area) for Porter.');
       return;
     }
     setFormError('');
@@ -131,7 +146,7 @@ const CartDrawer = () => {
       if (mapsLink) {
         message += `*Maps Location:* ${encodeURIComponent(mapsLink)}%0A`;
       } else if (shareOnWhatsApp) {
-        message += `*Maps Location:* 📍 Will share live location directly in WhatsApp chat%0A`;
+        message += `*Maps Location:* 📍 Will share live location pin directly in this chat%0A`;
       }
     } else {
       message += `*Fulfillment Method:* 🛍️ Self Pick up%0A`;
@@ -280,7 +295,7 @@ const CartDrawer = () => {
                       <MapPin size={14} /> Delivery Address <span className="req-star">*</span>
                     </label>
                     <textarea 
-                      placeholder="Flat/House No, Apartment/Street, Area, Landmark"
+                      placeholder="House/Flat No, Building/Apartment, Street, Area, Landmark"
                       value={deliveryAddress}
                       onChange={(e) => { setDeliveryAddress(e.target.value); if(formError) setFormError(''); }}
                       rows={2}
@@ -291,7 +306,7 @@ const CartDrawer = () => {
                   <div className="cart-location-box">
                     <div className="location-box-header">
                       <span className="location-box-title">
-                        <Navigation size={14} /> Pinpoint Location (For Porter Driver)
+                        <Navigation size={14} /> Map Location / Pin (Optional)
                       </span>
                       <button 
                         type="button"
@@ -307,7 +322,7 @@ const CartDrawer = () => {
                         ) : (
                           <>
                             <Crosshair size={13} />
-                            <span>Detect My Location</span>
+                            <span>Detect GPS</span>
                           </>
                         )}
                       </button>
@@ -316,26 +331,42 @@ const CartDrawer = () => {
                     {/* Feedback states if GPS fails or succeeds */}
                     {locationStatus === 'success' && (
                       <div className="location-feedback success animate-fade-in">
-                        <Check size={14} /> <span>Location captured successfully!</span>
+                        <Check size={14} /> <span>✓ GPS Location detected and linked!</span>
                       </div>
                     )}
 
-                    {(locationStatus === 'denied' || locationStatus === 'error' || locationStatus === 'unsupported') && (
-                      <div className="location-feedback warning animate-fade-in">
-                        <AlertCircle size={14} />
-                        <span>
-                          {locationStatus === 'denied' 
-                            ? 'Location access was blocked by your browser settings.' 
-                            : 'Could not fetch GPS location.'} You can use the option below!
-                        </span>
+                    {locationErrorDetail && (
+                      <div className="location-feedback info animate-fade-in">
+                        <Sparkles size={14} />
+                        <span>{locationErrorDetail}</span>
                       </div>
                     )}
+
+                    {/* Super easy WhatsApp Location fallback */}
+                    <div 
+                      className={`wa-location-toggle ${shareOnWhatsApp ? 'active' : ''}`}
+                      onClick={() => {
+                        const next = !shareOnWhatsApp;
+                        setShareOnWhatsApp(next);
+                        if (next) {
+                          setMapsLink('');
+                        }
+                      }}
+                    >
+                      <div className="wa-checkbox">
+                        {shareOnWhatsApp ? <Check size={13} color="white" /> : null}
+                      </div>
+                      <div className="wa-location-text">
+                        <strong>Share live location pin directly on WhatsApp 📲</strong>
+                        <small>Easiest on phone: just tap the paperclip icon in WhatsApp chat!</small>
+                      </div>
+                    </div>
 
                     {/* Google Maps link input */}
                     <div className="maps-input-wrapper">
                       <input 
                         type="url" 
-                        placeholder="Google Maps link (auto-filled or paste)"
+                        placeholder="Or paste Google Maps link here..."
                         value={mapsLink}
                         onChange={(e) => { 
                           setMapsLink(e.target.value); 
@@ -348,32 +379,10 @@ const CartDrawer = () => {
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="open-maps-link"
-                        title="Open Google Maps to copy link"
+                        title="Open Google Maps to pick location"
                       >
-                        <ExternalLink size={14} /> Maps
+                        <ExternalLink size={14} /> Maps App
                       </a>
-                    </div>
-
-                    {/* Super easy WhatsApp Location fallback */}
-                    <div 
-                      className={`wa-location-toggle ${shareOnWhatsApp ? 'active' : ''}`}
-                      onClick={() => {
-                        const next = !shareOnWhatsApp;
-                        setShareOnWhatsApp(next);
-                        if (next) {
-                          setMapsLink('');
-                          setLocationStatus('');
-                          if (formError) setFormError('');
-                        }
-                      }}
-                    >
-                      <div className="wa-checkbox">
-                        {shareOnWhatsApp ? <Check size={13} color="white" /> : null}
-                      </div>
-                      <div className="wa-location-text">
-                        <strong>I'll share my live location directly in WhatsApp chat</strong>
-                        <small>Easiest on phone: tap the paperclip/attachment icon in WhatsApp!</small>
-                      </div>
                     </div>
                   </div>
                 </>
