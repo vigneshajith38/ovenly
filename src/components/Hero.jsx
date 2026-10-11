@@ -1,19 +1,19 @@
 import React from 'react';
 import './Hero.css';
-import { DoodleLeaf, DoodleStar, DoodleHeart, DoodleSparkle, DoodleCupcake } from './Doodles';
+import { DoodleLeaf, DoodleStar, DoodleHeart, DoodleSparkle, DoodleCupcake, DoodleFlower } from './Doodles';
 
 const Hero = () => {
   return (
     <section className="hero">
       
-      {/* Mobile Doodles */}
-      <div className="hero-mobile-doodles mobile-only">
+      {/* Mobile Doodles - CSS controls visibility */}
+      <div className="hero-mobile-doodles">
         <DoodleLeaf className="hero-doodle hd-tl" />
         <DoodleStar className="hero-doodle hd-tr" />
         <DoodleHeart className="hero-doodle hd-cl" />
         <DoodleCupcake className="hero-doodle hd-cr" />
         <DoodleSparkle className="hero-doodle hd-bl" />
-        <DoodleLeaf className="hero-doodle hd-br" />
+        <DoodleFlower className="hero-doodle hd-br" />
       </div>
 
       <div className="hero-content-wrapper">

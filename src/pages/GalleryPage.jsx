@@ -9,10 +9,22 @@ const GalleryPage = () => {
 
   useEffect(() => {
     fetchGalleryImages();
+
+    // Safety timeout - if loading takes more than 8 seconds, stop and show empty state
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 8000);
+
+    return () => clearTimeout(timeout);
   }, []);
 
   const fetchGalleryImages = async () => {
-    if (!supabase) return setLoading(false);
+    // If supabase is not configured, show empty state immediately
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.storage
@@ -25,7 +37,9 @@ const GalleryPage = () => {
 
       if (error) throw error;
       
-      const files = (data || []).filter(file => file.name !== '.emptyFolderPlaceholder' && file.name !== 'gallery');
+      const files = (data || []).filter(
+        file => file.name !== '.emptyFolderPlaceholder' && file.name !== 'gallery'
+      );
       
       const imagesWithUrls = files.map(file => {
         const { data: { publicUrl } } = supabase.storage
@@ -37,7 +51,7 @@ const GalleryPage = () => {
       setImages(imagesWithUrls);
     } catch (error) {
       console.error('Error fetching gallery:', error);
-      setErrorMsg(error.message || 'Unknown error');
+      setErrorMsg(error.message || 'Could not load gallery');
     } finally {
       setLoading(false);
     }
@@ -55,24 +69,36 @@ const GalleryPage = () => {
       
       <div className="container" style={{ paddingBottom: '80px', marginTop: '40px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>Loading gallery...</div>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div className="gallery-loader">
+              <span className="handwritten" style={{ fontSize: '1.8rem', color: 'var(--color-forest)' }}>Loading our bakes...</span>
+            </div>
+          </div>
         ) : errorMsg ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'red' }}>Error loading gallery: {errorMsg}</div>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <span className="handwritten" style={{ fontSize: '2rem', color: 'var(--color-cookie-brown)' }}>🍪</span>
+            <p style={{ marginTop: '15px', color: 'var(--color-dark-chocolate)' }}>Oops! We couldn't load the gallery right now.</p>
+            <p style={{ fontSize: '0.85rem', color: '#999' }}>{errorMsg}</p>
+          </div>
+        ) : images.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <span style={{ fontSize: '3rem' }}>🧁</span>
+            <p className="handwritten" style={{ fontSize: '1.8rem', color: 'var(--color-forest)', marginTop: '15px' }}>
+              Coming soon!
+            </p>
+            <p style={{ color: 'var(--color-dark-chocolate)', maxWidth: '400px', margin: '10px auto' }}>
+              We're busy baking! Check back soon to see photos of our freshest creations.
+            </p>
+          </div>
         ) : (
           <div className="gallery-grid">
-            {images.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', gridColumn: '1 / -1' }}>
-                <p>No photos have been uploaded yet. Check back soon!</p>
+            {images.map((img, idx) => (
+              <div key={img.name} className="gallery-item polaroid animate-slide-in" style={{ animationDelay: `${idx * 0.1}s`, transform: `rotate(${idx % 2 === 0 ? '-3deg' : '3deg'})`, margin: '15px auto', width: '100%', maxWidth: '300px' }}>
+                <div className={`tape tape-${idx % 2 === 0 ? 'sage' : 'blue'}`}></div>
+                <img src={img.publicUrl} alt="Ovenly bake" loading="lazy" style={{ width: '100%', height: '280px', objectFit: 'cover' }} />
+                <p className="handwritten" style={{ textAlign: 'center', marginTop: '15px', fontSize: '1.4rem', color: 'var(--color-forest)' }}>Made with love ♡</p>
               </div>
-            ) : (
-              images.map((img, idx) => (
-                <div key={img.name} className="gallery-item polaroid animate-slide-in" style={{ animationDelay: `${idx * 0.1}s`, transform: `rotate(${idx % 2 === 0 ? '-3deg' : '3deg'})`, margin: '15px auto', width: '100%', maxWidth: '300px' }}>
-                  <div className={`tape tape-${idx % 2 === 0 ? 'sage' : 'blue'}`}></div>
-                  <img src={img.publicUrl} alt="Ovenly bake" loading="lazy" style={{ width: '100%', height: '280px', objectFit: 'cover' }} />
-                  <p className="handwritten" style={{ textAlign: 'center', marginTop: '15px', fontSize: '1.4rem', color: 'var(--color-forest)' }}>Made with love ♡</p>
-                </div>
-              ))
-            )}
+            ))}
           </div>
         )}
       </div>

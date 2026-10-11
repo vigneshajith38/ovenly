@@ -75,32 +75,32 @@
 }
 
 @media (max-width: 768px) {
-  /* Make corner blobs more visible on mobile */
+  /* Make corner blobs vivid and closer on mobile */
   .corner-pastel {
-    width: 280px;
-    height: 280px;
-    filter: blur(50px);
-    opacity: 0.8;
+    width: 300px;
+    height: 300px;
+    filter: blur(45px);
+    opacity: 0.9;
   }
   
-  .corner-tl { top: -80px; left: -80px; }
-  .corner-tr { top: -80px; right: -80px; }
-  .corner-bl { bottom: -80px; left: -80px; }
-  .corner-br { bottom: -80px; right: -80px; }
+  .corner-tl { top: -60px; left: -60px; }
+  .corner-tr { top: -60px; right: -60px; }
+  .corner-bl { bottom: -60px; left: -60px; }
+  .corner-br { bottom: -60px; right: -60px; }
   
-  /* Keep a good amount of doodles on mobile to avoid looking plain */
+  /* Make global doodles bigger and more visible on mobile */
   .gdoodle {
-    transform: scale(0.8);
-    opacity: 0.8;
+    transform: scale(1);
+    opacity: 0.9;
   }
   
-  .gdoodle-left-1 { top: 8%; left: 2%; }
-  .gdoodle-left-2 { top: 35%; left: -2%; }
-  .gdoodle-left-3 { bottom: 25%; left: 4%; display: block; }
+  .gdoodle-left-1 { top: 12%; left: 3%; width: 45px; }
+  .gdoodle-left-2 { top: 38%; left: 1%; width: 35px; }
+  .gdoodle-left-3 { bottom: 30%; left: 3%; display: block !important; width: 30px; }
   
-  .gdoodle-right-1 { top: 18%; right: 2%; }
-  .gdoodle-right-3 { top: 55%; right: -2%; display: block; }
-  .gdoodle-right-5 { bottom: 12%; right: 4%; }
+  .gdoodle-right-1 { top: 20%; right: 3%; width: 45px; }
+  .gdoodle-right-3 { top: 55%; right: 1%; display: block !important; width: 35px; }
+  .gdoodle-right-5 { bottom: 15%; right: 3%; width: 30px; }
   
   .gdoodle-left-4, .gdoodle-left-5, .gdoodle-left-6, 
   .gdoodle-right-2, .gdoodle-right-4, .gdoodle-right-6, .gdoodle-right-7 {
