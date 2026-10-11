@@ -160,12 +160,227 @@
   margin-top: 10px;
 }
 
-.modal-note {
-  font-size: 0.85rem;
-  color: #888;
+.modal-order-btn:disabled {
+  opacity: 0.6;
+  background-color: #888 !important;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Dietary Selector */
+.modal-dietary-box {
+  margin-bottom: 20px;
+}
+
+.modal-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-forest);
+  margin-bottom: 8px;
+}
+
+.dietary-toggle-group {
+  display: flex;
+  gap: 10px;
+}
+
+.dietary-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e0e0e0;
+  background: #fafafa;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dietary-btn:hover {
+  background: white;
+  border-color: #bbb;
+}
+
+.dietary-btn.active-eggless {
+  background: #f0fdf4;
+  border-color: #16a34a;
+  color: #15803d;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
+}
+
+.dietary-btn.active-egg {
+  background: #fef2f2;
+  border-color: #dc2626;
+  color: #b91c1c;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.dietary-static-pill span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.eggless-pill {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.egg-pill {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Custom Assorted Tin Builder */
+.assorted-tin-builder {
+  background: #faf8f5;
+  border: 1.5px solid #ebe4d8;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 22px;
+}
+
+.assorted-builder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.assorted-progress-text {
+  font-size: 0.78rem;
+  color: var(--color-caramel);
+  font-weight: 700;
+}
+
+.btn-preset {
+  background: white;
+  border: 1px solid var(--color-caramel);
+  color: var(--color-caramel);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-preset:hover {
+  background: var(--color-caramel);
+  color: white;
+}
+
+.assorted-slots-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.assorted-slot {
+  flex: 1;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+}
+
+.assorted-slot.filled {
+  background: #fcebd0;
+  border: 1.5px solid var(--color-caramel);
+  transform: scale(1.03);
+}
+
+.assorted-slot.empty {
+  background: white;
+  border: 1.5px dashed #ccc;
+}
+
+.assorted-flavours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.flavour-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  transition: all 0.2s;
+}
+
+.flavour-row.selected-row {
+  border-color: var(--color-forest);
+  background: #f7faf8;
+}
+
+.flavour-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-dark-chocolate);
+}
+
+.flavour-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.counter-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-forest);
+  transition: all 0.15s;
+}
+
+.counter-btn:hover:not(:disabled) {
+  background: var(--color-forest);
+  color: white;
+  border-color: var(--color-forest);
+}
+
+.counter-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.counter-val {
+  min-width: 18px;
   text-align: center;
-  margin-top: 15px;
-  margin-bottom: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-forest);
 }
 
 @media (max-width: 768px) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, Edit2, Trash2, Check, X, Upload } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X, Upload, Sparkles } from 'lucide-react';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -13,6 +13,12 @@ const AdminProducts = () => {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('cookie-tins');
+  const [dietaryType, setDietaryType] = useState('eggless'); // 'eggless' | 'contains_egg' | 'choice'
+  const [isCustomAssorted, setIsCustomAssorted] = useState(false);
+  const [assortedCapacity, setAssortedCapacity] = useState(6);
+  const [assortedFlavoursInput, setAssortedFlavoursInput] = useState(
+    'Signature Choc Chip, Double Chocolate Fudge, Red Velvet White Choc, Nutty Walnut Crunch, Biscoff Lotus Swirl, Salted Caramel Crisp'
+  );
   const [isPublished, setIsPublished] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const [photo, setPhoto] = useState(null);
@@ -46,6 +52,15 @@ const AdminProducts = () => {
       setDescription(product.description || '');
       setPrice(product.price);
       setCategory(product.category || 'cookie-tins');
+      setDietaryType(product.dietary_type || 'eggless');
+      setIsCustomAssorted(product.is_custom_assorted || false);
+      setAssortedCapacity(product.assorted_capacity || 6);
+      
+      const flavours = Array.isArray(product.assorted_flavours) 
+        ? product.assorted_flavours.join(', ')
+        : 'Signature Choc Chip, Double Chocolate Fudge, Red Velvet White Choc, Nutty Walnut Crunch, Biscoff Lotus Swirl, Salted Caramel Crisp';
+      setAssortedFlavoursInput(flavours);
+
       setIsPublished(product.is_published);
       setIsAvailable(product.is_available);
       setPhotoPreview(product.image_path || '');
@@ -56,6 +71,10 @@ const AdminProducts = () => {
       setDescription('');
       setPrice('');
       setCategory('cookie-tins');
+      setDietaryType('eggless');
+      setIsCustomAssorted(false);
+      setAssortedCapacity(6);
+      setAssortedFlavoursInput('Signature Choc Chip, Double Chocolate Fudge, Red Velvet White Choc, Nutty Walnut Crunch, Biscoff Lotus Swirl, Salted Caramel Crisp');
       setIsPublished(false);
       setIsAvailable(true);
       setPhotoPreview('');
@@ -101,11 +120,20 @@ const AdminProducts = () => {
         image_path = publicUrl;
       }
 
+      const flavoursArray = assortedFlavoursInput
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+
       const productData = {
         name,
         description,
         price: parseFloat(price),
         category,
+        dietary_type: dietaryType,
+        is_custom_assorted: isCustomAssorted,
+        assorted_capacity: parseInt(assortedCapacity, 10) || 6,
+        assorted_flavours: flavoursArray,
         is_published: isPublished,
         is_available: isAvailable,
         image_path
@@ -128,7 +156,7 @@ const AdminProducts = () => {
       closeModal();
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('Failed to save product');
+      alert('Failed to save product: ' + (error.message || error));
     } finally {
       setSaving(false);
     }
@@ -152,7 +180,12 @@ const AdminProducts = () => {
   return (
     <div>
       <div className="admin-header">
-        <h1>Products</h1>
+        <div>
+          <h1>Products & Bakes</h1>
+          <p style={{ color: '#666', fontSize: '0.9rem', margin: '4px 0 0' }}>
+            Manage menu bakes, Egg / Eggless dietary types, and custom Assorted Tins.
+          </p>
+        </div>
         <button className="btn btn-primary" onClick={() => openModal()}>
           <Plus size={20} style={{ marginRight: '8px' }} /> Add Product
         </button>
@@ -164,6 +197,7 @@ const AdminProducts = () => {
             <tr>
               <th>Image</th>
               <th>Name</th>
+              <th>Dietary Type</th>
               <th>Price</th>
               <th>Status</th>
               <th>Availability</th>
@@ -180,7 +214,31 @@ const AdminProducts = () => {
                     <div style={{ width: '50px', height: '50px', background: '#eee', borderRadius: '8px' }}></div>
                   )}
                 </td>
-                <td>{product.name}</td>
+                <td>
+                  <strong>{product.name}</strong>
+                  {product.is_custom_assorted && (
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-caramel)', fontWeight: 'bold' }}>
+                      ✨ Assorted Tin ({product.assorted_capacity || 6} pk)
+                    </span>
+                  )}
+                </td>
+                <td>
+                  {(!product.dietary_type || product.dietary_type === 'eggless') && (
+                    <span className="badge success" style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' }}>
+                      🟢 100% Eggless
+                    </span>
+                  )}
+                  {product.dietary_type === 'contains_egg' && (
+                    <span className="badge error" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca' }}>
+                      🔴 Contains Egg
+                    </span>
+                  )}
+                  {product.dietary_type === 'choice' && (
+                    <span className="badge warning" style={{ background: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
+                      🔄 Eggless / Egg Choice
+                    </span>
+                  )}
+                </td>
                 <td>₹{product.price}</td>
                 <td>
                   <span className={`badge ${product.is_published ? 'success' : 'warning'}`}>
@@ -206,7 +264,7 @@ const AdminProducts = () => {
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>No products found. Create one!</td>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>No products found. Create one!</td>
               </tr>
             )}
           </tbody>
@@ -231,7 +289,8 @@ const AdminProducts = () => {
                 <label>Description</label>
                 <textarea rows="3" value={description} onChange={e => setDescription(e.target.value)} />
               </div>
-              
+
+              {/* Price & Category */}
               <div style={{ display: 'flex', gap: '20px' }}>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Price (₹) *</label>
@@ -240,13 +299,70 @@ const AdminProducts = () => {
                 
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Category</label>
-                  <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #ddd' }}>
+                  <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}>
                     <option value="cookie-tins">Cookie Tins</option>
                     <option value="cupcakes">Cupcakes</option>
                     <option value="brownies">Brownies</option>
                     <option value="specials">Specials</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Dietary Specification (Egg or Eggless) */}
+              <div className="form-group">
+                <label style={{ fontWeight: 'bold', color: 'var(--color-forest)' }}>Dietary Type (Egg / Eggless)</label>
+                <select 
+                  value={dietaryType} 
+                  onChange={e => setDietaryType(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1.5px solid #ddd', background: '#fafafa', fontWeight: '500' }}
+                >
+                  <option value="eggless">🟢 100% Eggless</option>
+                  <option value="contains_egg">🔴 Contains Egg</option>
+                  <option value="choice">🔄 Choice Available (Customer picks Eggless or With Egg)</option>
+                </select>
+                <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                  Informs customers whether this treat is purely eggless or if they can choose.
+                </small>
+              </div>
+
+              {/* Custom Assorted Tin Configuration */}
+              <div style={{ background: '#fcf8f2', border: '1px solid #f0e4d0', borderRadius: '12px', padding: '15px', marginBottom: '20px' }}>
+                <div className="checkbox-group" style={{ marginBottom: isCustomAssorted ? '12px' : '0' }}>
+                  <input 
+                    type="checkbox" 
+                    id="isCustomAssorted" 
+                    checked={isCustomAssorted} 
+                    onChange={e => setIsCustomAssorted(e.target.checked)} 
+                  />
+                  <label htmlFor="isCustomAssorted" style={{ fontWeight: 'bold', color: 'var(--color-dark-chocolate)' }}>
+                    ✨ Custom Assorted Tin (Allow customers to pick their own mix of flavours)
+                  </label>
+                </div>
+
+                {isCustomAssorted && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                    <div className="form-group" style={{ marginBottom: '5px' }}>
+                      <label style={{ fontSize: '0.85rem' }}>Tin Capacity (Number of treats, e.g. 6 or 12)</label>
+                      <input 
+                        type="number" 
+                        min="2" 
+                        max="24"
+                        value={assortedCapacity} 
+                        onChange={e => setAssortedCapacity(e.target.value)} 
+                        style={{ width: '120px' }}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: '0' }}>
+                      <label style={{ fontSize: '0.85rem' }}>Available Flavours (Comma-separated)</label>
+                      <textarea 
+                        rows="2"
+                        value={assortedFlavoursInput} 
+                        onChange={e => setAssortedFlavoursInput(e.target.value)}
+                        placeholder="Signature Choc Chip, Double Chocolate Fudge, Red Velvet..."
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="form-group">
@@ -260,12 +376,12 @@ const AdminProducts = () => {
               <div style={{ display: 'flex', gap: '20px', marginBottom: '25px' }}>
                 <div className="checkbox-group">
                   <input type="checkbox" id="isPublished" checked={isPublished} onChange={e => setIsPublished(e.target.checked)} />
-                  <label htmlFor="isPublished">Publish (Visible to public)</label>
+                  <label htmlFor="isPublished">Publish (Visible in shop)</label>
                 </div>
                 
                 <div className="checkbox-group">
                   <input type="checkbox" id="isAvailable" checked={isAvailable} onChange={e => setIsAvailable(e.target.checked)} />
-                  <label htmlFor="isAvailable">Available (Can be ordered)</label>
+                  <label htmlFor="isAvailable">Available (In stock)</label>
                 </div>
               </div>
               

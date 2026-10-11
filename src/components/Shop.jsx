@@ -44,7 +44,11 @@ const Shop = ({ featuredOnly = false }) => {
         const formattedData = (data || []).map(p => ({
           ...p,
           image: p.image_path || p.image,
-          available: p.is_available
+          available: p.is_available,
+          dietaryType: p.dietary_type || 'eggless',
+          isCustomAssorted: p.is_custom_assorted,
+          assortedCapacity: p.assorted_capacity || 6,
+          assortedFlavours: p.assorted_flavours
         }));
         
         setDbProducts(formattedData);
@@ -61,7 +65,16 @@ const Shop = ({ featuredOnly = false }) => {
 
   const displayProducts = featuredOnly 
     ? dbProducts.slice(0, 3) 
-    : dbProducts.filter(p => activeCategory === 'all' || p.category === activeCategory);
+    : dbProducts.filter(p => {
+        if (activeCategory === 'eggless') {
+          const d = p.dietary_type || p.dietaryType || 'eggless';
+          return d === 'eggless' || d === 'choice';
+        }
+        if (activeCategory === 'assorted') {
+          return p.is_custom_assorted || p.isCustomAssorted;
+        }
+        return activeCategory === 'all' || p.category === activeCategory;
+      });
 
   return (
     <div className={`shop-container ${featuredOnly ? '' : 'full-page-shop container animate-fade-in'}`}>
@@ -90,6 +103,18 @@ const Shop = ({ featuredOnly = false }) => {
               onClick={() => setActiveCategory('cupcakes')}
             >
               Cupcakes
+            </button>
+            <button 
+              className={`filter-btn ${activeCategory === 'eggless' ? 'active' : ''}`}
+              onClick={() => setActiveCategory('eggless')}
+            >
+              🟢 100% Eggless
+            </button>
+            <button 
+              className={`filter-btn ${activeCategory === 'assorted' ? 'active' : ''}`}
+              onClick={() => setActiveCategory('assorted')}
+            >
+              ✨ Assorted Tins
             </button>
           </div>
         </>
