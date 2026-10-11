@@ -46,7 +46,7 @@ const Shop = ({ featuredOnly = false }) => {
           image: p.image_path || p.image,
           available: p.is_available,
           isCustomAssorted: p.is_custom_assorted,
-          assortedCapacity: p.assorted_capacity || 6,
+          assortedCapacity: p.assorted_capacity || 3,
           assortedFlavours: p.assorted_flavours
         }));
         
@@ -74,7 +74,10 @@ const Shop = ({ featuredOnly = false }) => {
   // Extract all available cookie tin flavour names from cookie tins
   const cookieTinOptions = dbProducts
     .filter(p => (p.category === 'cookie-tins') && !p.is_custom_assorted && !p.isCustomAssorted)
-    .map(p => p.name.replace(/ Cookie Tin| Cookies| Tin/gi, '').trim());
+    .map(p => {
+      const clean = p.name.replace(/ Cookie Tin| Cookies| Tin/gi, '').trim();
+      return clean.charAt(0).toUpperCase() + clean.slice(1);
+    });
 
   return (
     <div className={`shop-container ${featuredOnly ? '' : 'full-page-shop container animate-fade-in'}`}>
