@@ -25,10 +25,10 @@
 
 .about-logo-img {
   width: 100%;
-  mix-blend-mode: multiply;
-  background-color: var(--color-warm-vanilla);
-  padding: 30px;
-  border-radius: 10px;
+  max-width: 250px;
+  margin: 0 auto;
+  display: block;
+  padding: 10px;
 }
 
 .about-text {
