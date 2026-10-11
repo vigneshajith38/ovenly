@@ -85,6 +85,17 @@ export const products = [
     image: 'https://images.unsplash.com/photo-1587668178277-295251f900ce?auto=format&fit=crop&q=80&w=800',
     available: true,
     customisationOptions: []
+  },
+  {
+    id: '9',
+    name: 'Fudge Walnut Brownie Box (Set of 6)',
+    price: 850,
+    category: 'brownies',
+    description: 'Decadent, crackly-topped fudgy chocolate brownies loaded with toasted walnuts and dark chocolate chunks.',
+    longDescription: 'Made with 70% dark Belgian cocoa and browned butter. Intensely chocolatey with a melt-in-your-mouth chewy center and signature paper-thin crinkly crust. Comes in a gift box of 6.',
+    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=800',
+    available: true,
+    customisationOptions: ['Extra Choc Drizzle', 'Walnut Addition']
   }
 ];
 

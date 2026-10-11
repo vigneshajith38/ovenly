@@ -65,8 +65,14 @@ const Shop = ({ featuredOnly = false }) => {
   const displayProducts = featuredOnly 
     ? dbProducts.slice(0, 3) 
     : dbProducts.filter(p => {
-        if (activeCategory === 'assorted') {
-          return p.is_custom_assorted || p.isCustomAssorted;
+        if (activeCategory === 'cookie-tins') {
+          return p.category === 'cookie-tins' || p.category === 'cookies' || p.is_custom_assorted || p.isCustomAssorted;
+        }
+        if (activeCategory === 'cupcakes') {
+          return p.category === 'cupcakes' || p.category === 'cupcake';
+        }
+        if (activeCategory === 'brownies') {
+          return p.category === 'brownies' || p.category === 'brownie';
         }
         return activeCategory === 'all' || p.category === activeCategory;
       });
@@ -96,12 +102,6 @@ const Shop = ({ featuredOnly = false }) => {
               All Treats
             </button>
             <button 
-              className={`filter-btn ${activeCategory === 'assorted' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('assorted')}
-            >
-              ✨ Pick Any 3 Flavours
-            </button>
-            <button 
               className={`filter-btn ${activeCategory === 'cookie-tins' ? 'active' : ''}`}
               onClick={() => setActiveCategory('cookie-tins')}
             >
@@ -112,6 +112,12 @@ const Shop = ({ featuredOnly = false }) => {
               onClick={() => setActiveCategory('cupcakes')}
             >
               Cupcakes
+            </button>
+            <button 
+              className={`filter-btn ${activeCategory === 'brownies' ? 'active' : ''}`}
+              onClick={() => setActiveCategory('brownies')}
+            >
+              Brownies
             </button>
           </div>
         </>
