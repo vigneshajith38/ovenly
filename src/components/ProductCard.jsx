@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ProductModal from './ProductModal';
 import './ProductCard.css';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, cookieTinOptions = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOpenModal = () => setIsModalOpen(true);
@@ -20,7 +20,7 @@ const ProductCard = ({ product }) => {
           {isAssorted && (
             <div className="product-badges-container">
               <span className="assorted-badge">
-                ✨ Customize Your Own
+                ✨ Pick Any 3 Flavours
               </span>
             </div>
           )}
@@ -35,14 +35,18 @@ const ProductCard = ({ product }) => {
               onClick={handleOpenModal}
               disabled={!product.available}
             >
-              {product.available ? (isAssorted ? '✨ Customize Tin' : 'View Details') : 'Sold Out'}
+              {product.available ? (isAssorted ? '✨ Pick 3 Flavours' : 'View Details') : 'Sold Out'}
             </button>
           </div>
         </div>
       </div>
       
       {isModalOpen && (
-        <ProductModal product={product} onClose={handleCloseModal} />
+        <ProductModal 
+          product={product} 
+          onClose={handleCloseModal} 
+          cookieTinOptions={cookieTinOptions}
+        />
       )}
     </>
   );

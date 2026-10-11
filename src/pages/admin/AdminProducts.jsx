@@ -15,9 +15,9 @@ const AdminProducts = () => {
   const [category, setCategory] = useState('cookie-tins');
   const [dietaryType, setDietaryType] = useState('eggless'); // 'eggless' | 'contains_egg' | 'choice'
   const [isCustomAssorted, setIsCustomAssorted] = useState(false);
-  const [assortedCapacity, setAssortedCapacity] = useState(6);
+  const [assortedCapacity, setAssortedCapacity] = useState(3);
   const [assortedFlavoursInput, setAssortedFlavoursInput] = useState(
-    'Signature Choc Chip, Double Chocolate Fudge, Red Velvet White Choc, Nutty Walnut Crunch, Biscoff Lotus Swirl, Salted Caramel Crisp'
+    'Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp'
   );
   const [isPublished, setIsPublished] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
@@ -54,11 +54,11 @@ const AdminProducts = () => {
       setCategory(product.category || 'cookie-tins');
       setDietaryType(product.dietary_type || 'eggless');
       setIsCustomAssorted(product.is_custom_assorted || false);
-      setAssortedCapacity(product.assorted_capacity || 6);
+      setAssortedCapacity(product.assorted_capacity || 3);
       
       const flavours = Array.isArray(product.assorted_flavours) 
         ? product.assorted_flavours.join(', ')
-        : 'Signature Choc Chip, Double Chocolate Fudge, Red Velvet White Choc, Nutty Walnut Crunch, Biscoff Lotus Swirl, Salted Caramel Crisp';
+        : 'Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp';
       setAssortedFlavoursInput(flavours);
 
       setIsPublished(product.is_published);
@@ -73,8 +73,8 @@ const AdminProducts = () => {
       setCategory('cookie-tins');
       setDietaryType('eggless');
       setIsCustomAssorted(false);
-      setAssortedCapacity(6);
-      setAssortedFlavoursInput('Signature Choc Chip, Double Chocolate Fudge, Red Velvet White Choc, Nutty Walnut Crunch, Biscoff Lotus Swirl, Salted Caramel Crisp');
+      setAssortedCapacity(3);
+      setAssortedFlavoursInput('Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp');
       setIsPublished(false);
       setIsAvailable(true);
       setPhotoPreview('');
@@ -218,14 +218,14 @@ const AdminProducts = () => {
                   <strong>{product.name}</strong>
                   {product.is_custom_assorted && (
                     <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-caramel)', fontWeight: 'bold' }}>
-                      ✨ Assorted Tin ({product.assorted_capacity || 6} pk)
+                      ✨ Assorted Tin ({product.assorted_capacity || 3} Flavours)
                     </span>
                   )}
                 </td>
                 <td>
                   {product.is_custom_assorted ? (
                     <span className="badge success" style={{ background: '#fdf4eb', color: 'var(--color-caramel)', border: '1px solid #fed7aa' }}>
-                      ✨ Custom Mix ({product.assorted_capacity || 6} pk)
+                      ✨ Custom Mix ({product.assorted_capacity || 3} Flavours)
                     </span>
                   ) : (
                     <span style={{ color: '#888', fontSize: '0.85rem' }}>Standard</span>
@@ -319,7 +319,7 @@ const AdminProducts = () => {
                 {isCustomAssorted && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                     <div className="form-group" style={{ marginBottom: '5px' }}>
-                      <label style={{ fontSize: '0.85rem' }}>Tin Capacity (Number of treats, e.g. 6 or 12)</label>
+                      <label style={{ fontSize: '0.85rem' }}>Tin Capacity (Number of flavours, e.g. 3)</label>
                       <input 
                         type="number" 
                         min="2" 

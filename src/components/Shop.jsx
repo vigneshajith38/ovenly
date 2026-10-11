@@ -71,6 +71,11 @@ const Shop = ({ featuredOnly = false }) => {
         return activeCategory === 'all' || p.category === activeCategory;
       });
 
+  // Extract all available cookie tin flavour names from cookie tins
+  const cookieTinOptions = dbProducts
+    .filter(p => (p.category === 'cookie-tins') && !p.is_custom_assorted && !p.isCustomAssorted)
+    .map(p => p.name.replace(/ Cookie Tin| Cookies| Tin/gi, '').trim());
+
   return (
     <div className={`shop-container ${featuredOnly ? '' : 'full-page-shop container animate-fade-in'}`}>
       {!featuredOnly && (
@@ -91,7 +96,7 @@ const Shop = ({ featuredOnly = false }) => {
               className={`filter-btn ${activeCategory === 'assorted' ? 'active' : ''}`}
               onClick={() => setActiveCategory('assorted')}
             >
-              ✨ Customize Your Own
+              ✨ Pick Any 3 Flavours
             </button>
             <button 
               className={`filter-btn ${activeCategory === 'cookie-tins' ? 'active' : ''}`}
@@ -116,7 +121,11 @@ const Shop = ({ featuredOnly = false }) => {
       ) : (
         <div className="products-grid">
           {displayProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              cookieTinOptions={cookieTinOptions} 
+            />
           ))}
         </div>
       )}

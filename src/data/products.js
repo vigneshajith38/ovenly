@@ -1,21 +1,21 @@
 export const products = [
   {
     id: '5',
-    name: 'Customize Your Own Assorted Tin (Set of 6)',
+    name: 'Customize Your Own Assorted Tin (Pick Any 3 Flavours)',
     price: 1350,
     category: 'cookie-tins',
     isCustomAssorted: true,
-    assortedCapacity: 6,
+    assortedCapacity: 3,
     assortedFlavours: [
-      'Signature Choc Chip',
+      'Signature Chocolate Chip',
       'Double Chocolate Fudge',
       'Red Velvet White Choc',
-      'Nutty Walnut Crunch',
       'Biscoff Lotus Swirl',
+      'Nutty Walnut Crunch',
       'Salted Caramel Crisp'
     ],
-    description: 'Pick & mix your dream cookie assortment! Choose any 6 cookies hand-packed in our signature keepsake tin.',
-    longDescription: 'Select any combination of 6 handcrafted cookies from our signature menu. Hand-packed in our airtight golden-rimmed keepsake tin with decorative parchment and satin ribbon. Perfect for gifting or family treat night!',
+    description: 'Pick any 3 flavours from our Cookie Tin collection to create your personalized assorted keepsake tin!',
+    longDescription: 'Choose any combination of 3 flavours from our handcrafted cookie tins. Beautifully packed in our signature golden-rimmed keepsake tin with luxury parchment and a satin ribbon. Perfect for gifting or sampling our best bakes!',
     image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=800',
     available: true,
     customisationOptions: []
@@ -33,12 +33,34 @@ export const products = [
   },
   {
     id: '2',
-    name: 'Double Chocolate Fudge Cookies',
+    name: 'Double Chocolate Fudge Cookie Tin',
     price: 1300,
     category: 'cookie-tins',
-    description: 'Rich, dark, and intensely chocolatey. These fudge cookies are for serious chocolate lovers only.',
-    longDescription: 'Made with 70% dark cocoa and chunks of white and milk chocolate, these cookies are essentially brownies in cookie form. Comes in a tin of 10.',
+    description: 'Rich, dark, and intensely chocolatey fudge cookies packed in our signature tin. For serious chocolate lovers.',
+    longDescription: 'Made with 70% dark cocoa and chunks of white and milk chocolate, these cookies are essentially brownies in cookie form. Comes in our keepsake tin of 10.',
     image: 'https://images.unsplash.com/photo-1605666807758-39e144426dd3?auto=format&fit=crop&q=80&w=800',
+    available: true,
+    customisationOptions: []
+  },
+  {
+    id: '6',
+    name: 'Red Velvet White Choc Cookie Tin',
+    price: 1250,
+    category: 'cookie-tins',
+    description: 'Crimson cocoa cookies packed with silky Belgian white chocolate chunks and a touch of vanilla in a gift tin.',
+    longDescription: 'Rich crimson cocoa dough studded with melty Belgian white chocolate chunks. Crisp edges, gooey center, and breathtaking color.',
+    image: 'https://images.unsplash.com/photo-1618923834413-2770b904ee10?auto=format&fit=crop&q=80&w=800',
+    available: true,
+    customisationOptions: []
+  },
+  {
+    id: '7',
+    name: 'Biscoff Lotus Swirl Cookie Tin',
+    price: 1350,
+    category: 'cookie-tins',
+    description: 'Spiced caramel Lotus Biscoff cookies stuffed with molten Biscoff spread and biscuit crumb in a keepsake tin.',
+    longDescription: 'Brown sugar dough laced with speculoos spices, filled with molten Lotus spread, and topped with crunchy Biscoff biscuit chunks.',
+    image: 'https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&q=80&w=800',
     available: true,
     customisationOptions: []
   },
