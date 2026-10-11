@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import { supabase } from '../lib/supabase';
@@ -13,14 +13,40 @@ const Shop = ({ featuredOnly = false }) => {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [dbProducts, setDbProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const productsGridRef = useRef(null);
 
-  // Update active category if URL changes
+  const scrollToProducts = () => {
+    if (productsGridRef.current && window.innerWidth <= 768) {
+      const topOffset = 118; // offset for mobile fixed navbar + sticky category bar
+      const elementPosition = productsGridRef.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - topOffset;
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleCategoryClick = (cat) => {
+    setActiveCategory(cat);
+    setTimeout(scrollToProducts, 60);
+  };
+
+  // Update active category if URL changes (e.g. from homepage category cards)
   useEffect(() => {
     const cat = new URLSearchParams(location.search).get('category');
     if (cat) {
       setActiveCategory(cat);
+      setTimeout(scrollToProducts, 150);
     }
   }, [location.search]);
+
+  // When products finish loading, if a specific category was targeted, smoothly scroll on mobile
+  useEffect(() => {
+    if (!loading && (activeCategory !== 'all' || new URLSearchParams(location.search).get('category'))) {
+      setTimeout(scrollToProducts, 100);
+    }
+  }, [loading]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -94,50 +120,54 @@ const Shop = ({ featuredOnly = false }) => {
             <p className="shop-subtitle handwritten-large">Freshly baked, beautifully packaged, perfectly delicious.</p>
           </div>
           
-          <div className="category-filters">
-            <button 
-              className={`filter-btn ${activeCategory === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('all')}
-            >
-              All Treats
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === 'cookie-tins' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('cookie-tins')}
-            >
-              Cookie Tins
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === 'cupcakes' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('cupcakes')}
-            >
-              Cupcakes
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === 'brownies' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('brownies')}
-            >
-              Brownies
-            </button>
+          <div className="category-filters-container">
+            <div className="category-filters">
+              <button 
+                className={`filter-btn ${activeCategory === 'all' ? 'active' : ''}`}
+                onClick={() => handleCategoryClick('all')}
+              >
+                All Treats
+              </button>
+              <button 
+                className={`filter-btn ${activeCategory === 'cookie-tins' ? 'active' : ''}`}
+                onClick={() => handleCategoryClick('cookie-tins')}
+              >
+                Cookie Tins
+              </button>
+              <button 
+                className={`filter-btn ${activeCategory === 'cupcakes' ? 'active' : ''}`}
+                onClick={() => handleCategoryClick('cupcakes')}
+              >
+                Cupcakes
+              </button>
+              <button 
+                className={`filter-btn ${activeCategory === 'brownies' ? 'active' : ''}`}
+                onClick={() => handleCategoryClick('brownies')}
+              >
+                Brownies
+              </button>
+            </div>
           </div>
         </>
       )}
       
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#666' }}>
-          Loading our treats...
-        </div>
-      ) : (
-        <div className="products-grid">
-          {displayProducts.map(product => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              cookieTinOptions={cookieTinOptions} 
-            />
-          ))}
-        </div>
-      )}
+      <div className="products-container-wrapper" ref={productsGridRef}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#666' }}>
+            Loading our treats...
+          </div>
+        ) : (
+          <div className="products-grid">
+            {displayProducts.map(product => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                cookieTinOptions={cookieTinOptions} 
+              />
+            ))}
+          </div>
+        )}
+      </div>
       
       {!loading && displayProducts.length === 0 && (
         <div className="no-products">

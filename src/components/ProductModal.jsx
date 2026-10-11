@@ -115,149 +115,152 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
           </div>
           
           <div className="modal-details">
-            <div className="modal-header-section">
-              <h2>{product.name}</h2>
-              <p className="modal-price">₹{product.price}</p>
-            </div>
-
-            <p className="modal-desc">{product.longDescription || product.description}</p>
-            
-            {/* Custom Assorted Tin Builder */}
-            {isAssorted ? (
-              <div className="assorted-tin-builder">
-                <div className="assorted-builder-header">
-                  <div>
-                    <label className="modal-section-label" style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Sparkles size={16} color="var(--color-caramel)" /> Choose Any {capacity} Cookie Flavours
-                    </label>
-                    <span className="assorted-progress-text">
-                      {totalFlavoursSelected === capacity 
-                        ? '✨ All 3 flavours chosen! Ready to order.' 
-                        : `${totalFlavoursSelected} of ${capacity} flavours chosen`}
-                    </span>
-                  </div>
-                  <div className="assorted-header-actions">
-                    {totalFlavoursSelected > 0 && (
-                      <button type="button" onClick={clearSelection} className="btn-clear-slots">
-                        Clear
-                      </button>
-                    )}
-                    <button type="button" onClick={applyBakersMix} className="btn-preset">
-                      Top 3 Mix
-                    </button>
-                  </div>
-                </div>
-
-                {/* 3 Visual Flavour Slots */}
-                <div className="assorted-slots-bar three-slots">
-                  {Array.from({ length: capacity }).map((_, i) => {
-                    const flavour = selectedSlots[i];
-                    return flavour ? (
-                      <div 
-                        key={i} 
-                        className="assorted-slot filled"
-                        onClick={() => handleFlavourChange(flavour, -1)}
-                        title={`Click to remove ${flavour}`}
-                      >
-                        <span className="slot-badge">Flavour {i + 1}</span>
-                        <span className="slot-name">🍪 {flavour}</span>
-                        <span className="slot-remove">✕</span>
-                      </div>
-                    ) : (
-                      <div key={i} className="assorted-slot empty">
-                        <span className="slot-badge">Flavour {i + 1}</span>
-                        <span className="slot-empty-text">+ Pick Below</span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Cookie Tin Flavour Rows */}
-                <div className="assorted-flavours-list">
-                  {availableFlavours.map(flavour => {
-                    const count = flavourCounts[flavour] || 0;
-                    return (
-                      <div 
-                        key={flavour} 
-                        className={`flavour-row ${count > 0 ? 'selected-row' : ''}`}
-                        onClick={() => {
-                          if (count === 0 && totalFlavoursSelected < capacity) {
-                            handleFlavourChange(flavour, 1);
-                          }
-                        }}
-                      >
-                        <div className="flavour-info">
-                          <span className="flavour-icon">🍪</span>
-                          <span className="flavour-name">{flavour}</span>
-                        </div>
-                        <div className="flavour-counter" onClick={e => e.stopPropagation()}>
-                          <button 
-                            type="button"
-                            onClick={() => handleFlavourChange(flavour, -1)}
-                            disabled={count === 0}
-                            className="counter-btn"
-                            aria-label={`Decrease ${flavour}`}
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="counter-val">{count}</span>
-                          <button 
-                            type="button"
-                            onClick={() => handleFlavourChange(flavour, 1)}
-                            disabled={totalFlavoursSelected >= capacity}
-                            className="counter-btn"
-                            aria-label={`Increase ${flavour}`}
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            <div className="modal-scrollable-body">
+              <div className="modal-header-section">
+                <h2>{product.name}</h2>
+                <p className="modal-price">₹{product.price}</p>
               </div>
-            ) : (
-              /* Regular customization options if any */
-              product.customisationOptions && product.customisationOptions.length > 0 && (
-                <div className="modal-options">
-                  <label className="modal-section-label">Options:</label>
-                  <div className="options-grid">
-                    {product.customisationOptions.map(opt => (
-                      <button
-                        key={opt}
-                        type="button"
-                        className={`option-btn ${selectedCustomisation === opt ? 'selected' : ''}`}
-                        onClick={() => setSelectedCustomisation(opt)}
-                      >
-                        {opt}
+
+              <p className="modal-desc">{product.longDescription || product.description}</p>
+              
+              {/* Custom Assorted Tin Builder */}
+              {isAssorted ? (
+                <div className="assorted-tin-builder">
+                  <div className="assorted-builder-header">
+                    <div>
+                      <label className="modal-section-label" style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Sparkles size={16} color="var(--color-caramel)" /> Choose Any {capacity} Cookie Flavours
+                      </label>
+                      <span className="assorted-progress-text">
+                        {totalFlavoursSelected === capacity 
+                          ? '✨ All 3 flavours chosen! Ready to order.' 
+                          : `${totalFlavoursSelected} of ${capacity} flavours chosen`}
+                      </span>
+                    </div>
+                    <div className="assorted-header-actions">
+                      {totalFlavoursSelected > 0 && (
+                        <button type="button" onClick={clearSelection} className="btn-clear-slots">
+                          Clear
+                        </button>
+                      )}
+                      <button type="button" onClick={applyBakersMix} className="btn-preset">
+                        Top 3 Mix
                       </button>
-                    ))}
+                    </div>
+                  </div>
+
+                  {/* 3 Visual Flavour Slots */}
+                  <div className="assorted-slots-bar three-slots">
+                    {Array.from({ length: capacity }).map((_, i) => {
+                      const flavour = selectedSlots[i];
+                      return flavour ? (
+                        <div 
+                          key={i} 
+                          className="assorted-slot filled"
+                          onClick={() => handleFlavourChange(flavour, -1)}
+                          title={`Click to remove ${flavour}`}
+                        >
+                          <span className="slot-badge">Flavour {i + 1}</span>
+                          <span className="slot-name">🍪 {flavour}</span>
+                          <span className="slot-remove">✕</span>
+                        </div>
+                      ) : (
+                        <div key={i} className="assorted-slot empty">
+                          <span className="slot-badge">Flavour {i + 1}</span>
+                          <span className="slot-empty-text">+ Pick Below</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Cookie Tin Flavour Rows */}
+                  <div className="assorted-flavours-list">
+                    {availableFlavours.map(flavour => {
+                      const count = flavourCounts[flavour] || 0;
+                      return (
+                        <div 
+                          key={flavour} 
+                          className={`flavour-row ${count > 0 ? 'selected-row' : ''}`}
+                          onClick={() => {
+                            if (count === 0 && totalFlavoursSelected < capacity) {
+                              handleFlavourChange(flavour, 1);
+                            }
+                          }}
+                        >
+                          <div className="flavour-info">
+                            <span className="flavour-icon">🍪</span>
+                            <span className="flavour-name">{flavour}</span>
+                          </div>
+                          <div className="flavour-counter" onClick={e => e.stopPropagation()}>
+                            <button 
+                              type="button"
+                              onClick={() => handleFlavourChange(flavour, -1)}
+                              disabled={count === 0}
+                              className="counter-btn"
+                              aria-label={`Decrease ${flavour}`}
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <span className="counter-val">{count}</span>
+                            <button 
+                              type="button"
+                              onClick={() => handleFlavourChange(flavour, 1)}
+                              disabled={totalFlavoursSelected >= capacity}
+                              className="counter-btn"
+                              aria-label={`Increase ${flavour}`}
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              )
-            )}
-            
-            {/* Quantity Selector */}
-            <div className="modal-quantity">
-              <label className="modal-section-label">Quantity:</label>
-              <div className="quantity-selector">
-                <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
-                <span>{quantity}</span>
-                <button type="button" onClick={() => setQuantity(quantity + 1)}>+</button>
-              </div>
+              ) : (
+                /* Regular customization options if any */
+                product.customisationOptions && product.customisationOptions.length > 0 && (
+                  <div className="modal-options">
+                    <label className="modal-section-label">Options:</label>
+                    <div className="options-grid">
+                      {product.customisationOptions.map(opt => (
+                        <button
+                          key={opt}
+                          type="button"
+                          className={`option-btn ${selectedCustomisation === opt ? 'selected' : ''}`}
+                          onClick={() => setSelectedCustomisation(opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              )}
             </div>
             
-            {/* Add to Cart Button */}
-            <button 
-              className="btn btn-primary modal-order-btn" 
-              onClick={handleOrder}
-              disabled={isAssorted && totalFlavoursSelected !== capacity}
-            >
-              <ShoppingBag size={20} />
-              {isAssorted && totalFlavoursSelected < capacity
-                ? `Choose ${capacity - totalFlavoursSelected} more flavour${capacity - totalFlavoursSelected > 1 ? 's' : ''}`
-                : (isAssorted ? `Add 3-Flavour Assorted Tin • ₹${product.price * quantity}` : `Add to Cart • ₹${product.price * quantity}`)}
-            </button>
+            {/* Sticky/Compact Footer Actions Bar */}
+            <div className="modal-footer-actions">
+              <div className="modal-quantity">
+                <label className="modal-section-label desktop-only-label">Qty:</label>
+                <div className="quantity-selector">
+                  <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} aria-label="Decrease quantity">-</button>
+                  <span>{quantity}</span>
+                  <button type="button" onClick={() => setQuantity(quantity + 1)} aria-label="Increase quantity">+</button>
+                </div>
+              </div>
+              
+              <button 
+                className="btn btn-primary modal-order-btn" 
+                onClick={handleOrder}
+                disabled={isAssorted && totalFlavoursSelected !== capacity}
+              >
+                <ShoppingBag size={18} />
+                {isAssorted && totalFlavoursSelected < capacity
+                  ? `Pick ${capacity - totalFlavoursSelected} more`
+                  : (isAssorted ? `Add Assorted Tin • ₹${product.price * quantity}` : `Add to Cart • ₹${product.price * quantity}`)}
+              </button>
+            </div>
           </div>
         </div>
       </div>
