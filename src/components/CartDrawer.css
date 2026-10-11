@@ -417,6 +417,31 @@
   background: #edf7f0;
   color: #1e5631;
   border: 1px solid #cce8d4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+}
+
+.btn-preview-maps {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  color: #1e5631;
+  border: 1.5px solid #b7dfc3;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-preview-maps:hover {
+  background: #1e5631;
+  color: white;
 }
 
 .location-feedback.warning {
