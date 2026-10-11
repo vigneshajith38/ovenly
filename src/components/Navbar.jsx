@@ -39,11 +39,7 @@ const Navbar = () => {
               Shop Treats
             </Link>
           </li>
-          <li>
-            <Link to="/gallery" className={location.pathname === '/gallery' ? 'active-link' : ''} onClick={closeMenu}>
-              Our Bakes
-            </Link>
-          </li>
+
           <li>
             <Link to="/reviews" className={location.pathname === '/reviews' ? 'active-link' : ''} onClick={closeMenu}>
               Reviews & Love
