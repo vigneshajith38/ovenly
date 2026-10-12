@@ -142,25 +142,31 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
       {/* In-Card Quick Popover: Pops up right here on the card! */}
       {isPopoverOpen && (
         <div className="product-card-popover" onClick={e => e.stopPropagation()}>
+          <button 
+            type="button" 
+            className="popover-close-btn" 
+            onClick={handleClosePopover} 
+            aria-label="Close"
+          >
+            <X size={14} />
+          </button>
+
           <div className="popover-header">
-            <div className="popover-title-row">
-              <h4 className="popover-title">{product.name}</h4>
-              <button 
-                type="button" 
-                className="popover-close-btn" 
-                onClick={handleClosePopover} 
-                aria-label="Close"
-              >
-                <X size={15} />
-              </button>
-            </div>
-            <div className="popover-price-row">
-              <span className="popover-price">₹{product.price}</span>
-              {isAssorted && (
-                <button type="button" onClick={applyTop3Preset} className="popover-preset-chip">
-                  <Sparkles size={11} /> Top 3 Mix
-                </button>
-              )}
+            <div className="popover-media-row">
+              <div className="popover-thumb-container">
+                <img src={product.image} alt={product.name} className="popover-thumb" />
+              </div>
+              <div className="popover-meta">
+                <h4 className="popover-title">{product.name}</h4>
+                <div className="popover-price-bar">
+                  <span className="popover-price">₹{product.price}</span>
+                  {isAssorted && (
+                    <button type="button" onClick={applyTop3Preset} className="popover-preset-chip">
+                      <Sparkles size={11} /> Top 3 Mix
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 

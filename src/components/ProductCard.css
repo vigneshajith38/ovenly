@@ -193,15 +193,31 @@
 .product-card-popover {
   position: absolute;
   inset: 0;
-  background: #ffffff;
+  background-color: inherit;
   border-radius: 8px;
   z-index: 30;
-  padding: 12px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
   animation: cardPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.product-card-popover::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 48px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  border-radius: 2px;
+  pointer-events: none;
 }
 
 @keyframes cardPopIn {
@@ -215,79 +231,109 @@
   }
 }
 
-.popover-header {
-  margin-bottom: 6px;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
-  padding-bottom: 6px;
-  flex-shrink: 0;
-}
-
-.popover-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.popover-title {
-  font-family: var(--font-heading);
-  font-size: 0.95rem;
-  color: var(--color-forest);
-  margin: 0;
-  line-height: 1.25;
-  flex: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 .popover-close-btn {
-  background: #f0ebe4;
-  border: none;
-  width: 24px;
-  height: 24px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-dark-chocolate);
   cursor: pointer;
-  flex-shrink: 0;
+  z-index: 15;
   transition: all 0.15s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 .popover-close-btn:hover {
-  background: #e0d8cc;
+  background: white;
   color: #c62828;
+  transform: scale(1.1);
 }
 
-.popover-price-row {
+.popover-header {
+  margin-bottom: 6px;
+  border-bottom: 1px dashed rgba(6, 75, 53, 0.15);
+  padding-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.popover-media-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 3px;
+  gap: 8px;
+  padding-right: 20px; /* Leave room for close button */
+}
+
+.popover-thumb-container {
+  width: 58px;
+  height: 58px;
+  background: white;
+  padding: 3px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.popover-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.popover-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.popover-title {
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  color: var(--color-forest);
+  margin: 0;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.popover-price-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .popover-price {
   font-family: var(--font-handwriting);
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--color-caramel);
+  color: var(--color-dark-chocolate);
+  line-height: 1;
 }
 
 .popover-preset-chip {
-  background: #fdf5ea;
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--color-caramel);
   color: var(--color-caramel);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  line-height: 1;
 }
 
 .popover-preset-chip:hover {
@@ -305,12 +351,12 @@
 }
 
 .popover-desc {
-  font-size: 0.8rem;
-  color: #555;
-  line-height: 1.35;
-  margin: 0 0 8px;
+  font-size: 0.76rem;
+  color: rgba(6, 75, 53, 0.85);
+  line-height: 1.3;
+  margin: 0 0 6px;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -321,7 +367,7 @@
 }
 
 .popover-opt-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--color-forest);
   display: block;
@@ -335,12 +381,12 @@
 }
 
 .popover-opt-btn {
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  color: #555;
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border: 1px solid rgba(6, 75, 53, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--color-forest);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -355,7 +401,7 @@
 .popover-assorted-builder {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   flex: 1;
 }
 
@@ -367,32 +413,32 @@
 }
 
 .mini-slot {
-  border: 1px dashed #d5cbbe;
+  border: 1px dashed rgba(6, 75, 53, 0.25);
   border-radius: 6px;
-  padding: 3px 2px;
+  padding: 2px 4px;
   text-align: center;
-  font-size: 0.65rem;
+  font-size: 0.63rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
+  min-height: 28px;
   cursor: pointer;
-  background: #faf8f5;
+  background: rgba(255, 255, 255, 0.7);
   transition: all 0.15s;
 }
 
 .mini-slot.filled {
-  border: 1.5px solid var(--color-caramel);
-  background: #fdf5ea;
+  border: 1.5px solid var(--color-forest);
+  background: white;
   font-weight: 700;
-  color: var(--color-dark-chocolate);
+  color: var(--color-forest);
   position: relative;
 }
 
 .mini-slot-num {
-  font-size: 0.55rem;
-  color: #999;
+  font-size: 0.52rem;
+  color: #888;
   text-transform: uppercase;
   line-height: 1;
 }
@@ -406,7 +452,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  font-size: 0.63rem;
+  font-size: 0.62rem;
   line-height: 1.1;
 }
 
@@ -414,14 +460,14 @@
   position: absolute;
   top: 1px;
   right: 2px;
-  font-size: 0.55rem;
-  color: #999;
+  font-size: 0.52rem;
+  color: #888;
 }
 
 .mini-flavour-chips-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
+  gap: 3px;
   flex: 1;
 }
 
@@ -429,11 +475,11 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  padding: 3px 5px;
+  padding: 2px 5px;
   border-radius: 6px;
-  border: 1px solid #e0e0e0;
-  background: white;
-  font-size: 0.67rem;
+  border: 1px solid rgba(6, 75, 53, 0.15);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--color-dark-chocolate);
   cursor: pointer;
@@ -443,19 +489,19 @@
 }
 
 .mini-flavour-chip:hover {
-  background: #f9f9f9;
-  border-color: #ccc;
+  background: white;
+  border-color: #bbb;
 }
 
 .mini-flavour-chip.active {
   border-color: var(--color-forest);
-  background: #eef5f1;
-  color: var(--color-forest);
+  background: var(--color-forest);
+  color: white;
   font-weight: 700;
 }
 
 .chip-indicator {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: bold;
 }
 
@@ -468,8 +514,8 @@
 /* Popover Footer Action Row */
 .popover-footer {
   margin-top: auto;
-  padding-top: 6px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  padding-top: 5px;
+  border-top: 1px dashed rgba(6, 75, 53, 0.15);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -479,17 +525,18 @@
 .popover-qty-selector {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(6, 75, 53, 0.2);
   border-radius: 6px;
+  background: white;
   overflow: hidden;
-  height: 32px;
+  height: 30px;
   flex-shrink: 0;
 }
 
 .popover-qty-selector button {
-  width: 24px;
+  width: 22px;
   height: 100%;
-  background: #f7f7f7;
+  background: rgba(255, 255, 255, 0.9);
   border: none;
   cursor: pointer;
   display: flex;
@@ -500,28 +547,30 @@
 }
 
 .popover-qty-selector button:hover {
-  background: #eaeaea;
+  background: #eee;
 }
 
 .popover-qty-val {
-  width: 22px;
+  width: 20px;
   text-align: center;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
+  color: var(--color-forest);
 }
 
 .popover-add-btn {
   flex: 1;
-  height: 32px;
+  height: 30px;
   padding: 0 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   border-radius: 6px;
   white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(6, 75, 53, 0.2);
 }
 
 .popover-add-btn:disabled {
