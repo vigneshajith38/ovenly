@@ -21,11 +21,11 @@ const CartDrawer = () => {
   const [locationErrorDetail, setLocationErrorDetail] = useState('');
   const [formError, setFormError] = useState('');
 
-  // High-accuracy Progressive GPS tracking engine
+  // Fast Two-Stage Progressive GPS engine (Instant fix + background refinement)
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
       setLocationStatus('unsupported');
-      setLocationErrorDetail('Geolocation is not supported by your browser.');
+      setLocationErrorDetail('Geolocation is not supported by your browser. Please enter your address or share live location on WhatsApp.');
       setShareOnWhatsApp(true);
       return;
     }
@@ -33,128 +33,184 @@ const CartDrawer = () => {
     setIsLocating(true);
     setLocationStatus('');
     setLocationErrorDetail('');
-    setLocationAccuracy(null);
     setFormError('');
 
-    let bestCoords = null;
-    let watchId = null;
-    let timer = null;
+    let activeWatchId = null;
+    let fallbackTimer = null;
+    let maxTimeoutTimer = null;
+    let bestAccuracy = Infinity;
+    let hasResolvedInitial = false;
 
-    const stopTracking = (finalPosition) => {
-      if (watchId !== null) {
-        try { navigator.geolocation.clearWatch(watchId); } catch (_) {}
-        watchId = null;
-      }
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      setIsLocating(false);
-
-      if (finalPosition && finalPosition.coords) {
-        const { latitude: lat, longitude: lng, accuracy } = finalPosition.coords;
-        const link = `https://maps.google.com/?q=${lat},${lng}`;
-        setMapsLink(link);
-        setLocationAccuracy(Math.round(accuracy));
-        setShareOnWhatsApp(false);
-        setLocationStatus('success');
-        setLocationErrorDetail('');
-
-        // Reverse geocoding with clean street & locality details
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+    // Helper to safely reverse geocode with an AbortController timeout (4s)
+    const fetchAddressReverse = (lat, lng) => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+          signal: controller.signal
+        })
           .then((res) => (res.ok ? res.json() : null))
           .then((data) => {
-            if (data && data.address && !deliveryAddress.trim()) {
-              const a = data.address;
-              const streetParts = [
-                a.house_number,
-                a.road || a.pedestrian || a.suburb,
-                a.neighbourhood || a.residential,
-                a.city || a.town || a.city_district,
-                a.postcode
-              ].filter(Boolean);
-              
-              const cleanAddress = streetParts.length >= 2 
-                ? streetParts.join(', ') 
-                : (data.display_name || '');
+            clearTimeout(timeoutId);
+            if (data && data.address) {
+              setDeliveryAddress((prev) => {
+                if (prev && prev.trim().length > 0) return prev; // Do not overwrite user-typed address
+                const a = data.address;
+                const streetParts = [
+                  a.house_number,
+                  a.road || a.pedestrian || a.suburb,
+                  a.neighbourhood || a.residential,
+                  a.city || a.town || a.city_district,
+                  a.postcode
+                ].filter(Boolean);
                 
-              if (cleanAddress) {
-                setDeliveryAddress(cleanAddress);
-              }
+                const cleanAddress = streetParts.length >= 2 
+                  ? streetParts.join(', ') 
+                  : (data.display_name || '');
+                  
+                return cleanAddress || prev;
+              });
             }
           })
-          .catch((err) => console.warn('Reverse geocoding silent error:', err));
-      } else {
-        setLocationStatus('unavailable');
-        setLocationErrorDetail("Couldn't achieve GPS satellite fix indoors. Switched to WhatsApp live location below!");
-        setShareOnWhatsApp(true);
+          .catch(() => {
+            // Silently ignore reverse geocoding errors so map pin remains locked
+          });
+      } catch (_) {}
+    };
+
+    const cleanup = () => {
+      if (activeWatchId !== null) {
+        try { navigator.geolocation.clearWatch(activeWatchId); } catch (_) {}
+        activeWatchId = null;
+      }
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (maxTimeoutTimer) clearTimeout(maxTimeoutTimer);
+      setIsLocating(false);
+    };
+
+    // Apply a valid position fix immediately
+    const applyPositionFix = (pos, isInitial = false) => {
+      const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+      const roundedAcc = Math.round(accuracy);
+      
+      // Update if this is our initial fix or if accuracy has sharpened
+      if (!hasResolvedInitial || roundedAcc < bestAccuracy) {
+        bestAccuracy = roundedAcc;
+        const link = `https://www.google.com/maps?q=${lat},${lng}`;
+        setMapsLink(link);
+        setLocationAccuracy(roundedAcc);
+        setLocationStatus('success');
+        setLocationErrorDetail('');
+        setShareOnWhatsApp(false); // GPS successfully locked, do not force WhatsApp
+        
+        if (!hasResolvedInitial) {
+          fetchAddressReverse(lat, lng);
+        }
+      }
+
+      hasResolvedInitial = true;
+
+      // If pinpoint accuracy (<= 20m) achieved, stop active tracking immediately
+      if (roundedAcc <= 20) {
+        cleanup();
       }
     };
 
-    // Watch position with maximumAge: 0 to force fresh satellite fix
-    try {
-      watchId = navigator.geolocation.watchPosition(
-        (pos) => {
-          const acc = pos.coords.accuracy;
-          // Keep best accuracy reading
-          if (!bestCoords || acc < bestCoords.coords.accuracy) {
-            bestCoords = pos;
-            setLocationAccuracy(Math.round(acc));
-          }
+    // Stage 1: Immediate fast check with fresh cache allowance (60s).
+    // Returns almost instantly (0.5s - 2s) on mobile phones indoors & outdoors using Wi-Fi / cell fusion!
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        applyPositionFix(pos, true);
 
-          // If pinpoint GPS accuracy achieved (under 25 meters), lock in immediately!
-          if (acc <= 25) {
-            stopTracking(pos);
-          }
-        },
-        (err) => {
-          console.warn("watchPosition error:", err);
-          if (err.code === 1) { // PERMISSION_DENIED
-            stopTracking(null);
-            setLocationStatus('denied');
-            setLocationErrorDetail('Location permission was denied in your phone browser settings. Switched to WhatsApp live location below!');
-            setShareOnWhatsApp(true);
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          maximumAge: 0, // Force fresh satellite fix, NEVER stale cell tower cache!
-          timeout: 12000 // Allow up to 12s for mobile GPS satellites to lock
+        // If accuracy is already very sharp (<= 25m), finish right away
+        if (pos.coords.accuracy <= 25) {
+          cleanup();
+          return;
         }
-      );
 
-      // Safety timeout: after 9 seconds, take the best accuracy achieved so far
-      timer = setTimeout(() => {
-        if (bestCoords) {
-          stopTracking(bestCoords);
-        } else {
-          // If no satellite reading yet, try a quick single low-accuracy snapshot as fallback
-          navigator.geolocation.getCurrentPosition(
-            (pos) => stopTracking(pos),
-            (err) => {
-              stopTracking(null);
-              if (err.code === 1) {
-                setLocationStatus('denied');
-                setLocationErrorDetail('Location permission was denied in your browser settings.');
-              } else if (err.code === 2) {
-                setLocationStatus('unavailable');
-                setLocationErrorDetail("Device GPS is turned off in settings. Switched to WhatsApp live location below!");
-              } else {
-                setLocationStatus('timeout');
-                setLocationErrorDetail("GPS signal timed out indoors. Switched to WhatsApp live location below!");
-              }
-              setShareOnWhatsApp(true);
+        // If indoor Wi-Fi/cell accuracy is acceptable (25m - 80m),
+        // we've ALREADY locked the map pin! Now run a gentle background refinement
+        // for up to 8s to see if satellites sharpen it further without blocking the user.
+        try {
+          activeWatchId = navigator.geolocation.watchPosition(
+            (watchPos) => {
+              applyPositionFix(watchPos, false);
             },
-            { enableHighAccuracy: false, timeout: 5000, maximumAge: 30000 }
+            () => {}, // Ignore intermediate watch errors since we already have a locked position
+            {
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 8000
+            }
           );
+        } catch (_) {}
+
+        // Stop background refinement after 8 seconds
+        fallbackTimer = setTimeout(() => {
+          cleanup();
+        }, 8000);
+      },
+      (err) => {
+        // If user explicitly denied permission (code 1), stop immediately
+        if (err.code === 1) { // PERMISSION_DENIED
+          cleanup();
+          setLocationStatus('denied');
+          setLocationErrorDetail('Location permission was denied in your browser settings. You can share your live location directly on WhatsApp below!');
+          setShareOnWhatsApp(true);
+          return;
         }
-      }, 9000);
-    } catch (e) {
-      console.error("Geolocation launch error:", e);
-      stopTracking(null);
-      setShareOnWhatsApp(true);
-    }
+
+        // If high accuracy failed or timed out (e.g. strict indoor environment),
+        // Stage 2: Fallback to standard network/cell positioning immediately
+        navigator.geolocation.getCurrentPosition(
+          (fallbackPos) => {
+            applyPositionFix(fallbackPos, true);
+            cleanup();
+          },
+          (fallbackErr) => {
+            cleanup();
+            if (fallbackErr.code === 1) {
+              setLocationStatus('denied');
+              setLocationErrorDetail('Location permission was denied in your browser settings. Switched to WhatsApp live location below!');
+              setShareOnWhatsApp(true);
+            } else if (fallbackErr.code === 2) {
+              setLocationStatus('unavailable');
+              setLocationErrorDetail("Device GPS is turned off. Please turn on Location in phone settings or share via WhatsApp below.");
+              setShareOnWhatsApp(true);
+            } else {
+              // Only trigger timeout if both high-accuracy AND network fallback completely failed after full cycle
+              setLocationStatus('timeout');
+              setLocationErrorDetail("GPS signal is weak indoors. You can share your live location pin on WhatsApp below or enter your address!");
+              setShareOnWhatsApp(true);
+            }
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 7000,
+            maximumAge: 300000 // Accept up to 5 min network cache
+          }
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 6000,
+        maximumAge: 60000 // Allow up to 1-minute fresh network/Wi-Fi fix for instant response
+      }
+    );
+
+    // Global safety limit: Never let loading spinner spin for more than 12 seconds
+    maxTimeoutTimer = setTimeout(() => {
+      if (!hasResolvedInitial) {
+        cleanup();
+        setLocationStatus('timeout');
+        setLocationErrorDetail("GPS signal is weak indoors. You can share your live location pin on WhatsApp below or enter your address!");
+        setShareOnWhatsApp(true);
+      } else {
+        cleanup();
+      }
+    }, 12000);
   };
+
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
@@ -382,10 +438,14 @@ const CartDrawer = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Check size={14} /> 
                           <div>
-                            <strong>✓ Exact GPS Locked!</strong>
+                            <strong>
+                              {locationAccuracy && locationAccuracy <= 25 
+                                ? '✓ Exact GPS Locked!' 
+                                : '✓ Location Pin Locked!'}
+                            </strong>
                             {locationAccuracy && (
                               <div style={{ fontSize: '0.72rem', opacity: 0.9 }}>
-                                Satellite precision: ±{locationAccuracy}m
+                                Accuracy: ±{locationAccuracy}m {isLocating ? '(refining...)' : ''}
                               </div>
                             )}
                           </div>
