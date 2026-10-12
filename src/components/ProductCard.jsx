@@ -110,69 +110,71 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
       ref={cardRef}
       className={`product-card ${isAssorted ? 'assorted-product-card' : ''} ${isPopoverOpen ? 'popover-active' : ''}`}
     >
-      {/* Front Face: Regular Product Card */}
-      <div className="product-image-container" onClick={handleOpenPopover}>
+      {/* Product Image: EXACT SAME FULL SIZE POLAROID PICTURE */}
+      <div 
+        className="product-image-container" 
+        onClick={!isPopoverOpen ? handleOpenPopover : undefined}
+      >
         <img src={product.image} alt={product.name} className="product-image" />
         {!product.available && <div className="product-overlay">Sold Out</div>}
         
-        {isAssorted && (
+        {isAssorted && !isPopoverOpen && (
           <div className="product-badges-container">
             <span className="assorted-badge">
               ✨ Pick Any 3 Flavours
             </span>
           </div>
         )}
-      </div>
 
-      <div className="product-info">
-        <h3 className="product-title" onClick={handleOpenPopover}>{product.name}</h3>
-        <p className="product-desc">{product.description}</p>
-        <div className="product-footer">
-          <span className="product-price">₹{product.price}</span>
-          <button 
-            className="btn btn-primary btn-sm" 
-            onClick={handleOpenPopover}
-            disabled={!product.available}
-          >
-            {product.available ? (isAssorted ? '✨ Pick 3 Flavours' : 'View Details') : 'Sold Out'}
-          </button>
-        </div>
-      </div>
-
-      {/* In-Card Quick Popover: Pops up right here on the card! */}
-      {isPopoverOpen && (
-        <div className="product-card-popover" onClick={e => e.stopPropagation()}>
+        {/* When card is popped open: cute close button on the picture */}
+        {isPopoverOpen && (
           <button 
             type="button" 
-            className="popover-close-btn" 
+            className="card-pop-close-btn" 
             onClick={handleClosePopover} 
             aria-label="Close"
           >
-            <X size={14} />
+            <X size={15} />
           </button>
+        )}
+      </div>
 
-          <div className="popover-header">
-            <div className="popover-media-row">
-              <div className="popover-thumb-container">
-                <img src={product.image} alt={product.name} className="popover-thumb" />
-              </div>
-              <div className="popover-meta">
-                <h4 className="popover-title">{product.name}</h4>
-                <div className="popover-price-bar">
-                  <span className="popover-price">₹{product.price}</span>
-                  {isAssorted && (
-                    <button type="button" onClick={applyTop3Preset} className="popover-preset-chip">
-                      <Sparkles size={11} /> Top 3 Mix
-                    </button>
-                  )}
-                </div>
-              </div>
+      {/* Product Info: Same Card Size, with Smooth Cart Expansion */}
+      <div className="product-info">
+        <h3 
+          className="product-title" 
+          onClick={!isPopoverOpen ? handleOpenPopover : undefined}
+        >
+          {product.name}
+        </h3>
+
+        {!isPopoverOpen ? (
+          /* Normal Default State */
+          <>
+            <p className="product-desc">{product.description}</p>
+            <div className="product-footer">
+              <span className="product-price">₹{product.price}</span>
+              <button 
+                className="btn btn-primary btn-sm" 
+                onClick={handleOpenPopover}
+                disabled={!product.available}
+              >
+                {product.available ? (isAssorted ? '✨ Pick 3 Flavours' : 'View Details') : 'Sold Out'}
+              </button>
             </div>
-          </div>
-
-          <div className="popover-body">
+          </>
+        ) : (
+          /* Popped Open State: Exact same card, exact same pic, cart details right here! */
+          <div className="card-pop-details animate-fade-in" onClick={e => e.stopPropagation()}>
             {isAssorted ? (
               <div className="popover-assorted-builder">
+                <div className="popover-assorted-header-row">
+                  <span className="popover-assorted-label">Choose 3 Flavours:</span>
+                  <button type="button" onClick={applyTop3Preset} className="popover-preset-chip">
+                    <Sparkles size={11} /> Top 3 Mix
+                  </button>
+                </div>
+
                 {/* 3 Visual Slots */}
                 <div className="mini-slots-bar">
                   {Array.from({ length: capacity }).map((_, i) => {
@@ -194,7 +196,7 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
                   })}
                 </div>
 
-                {/* 6 Clickable Flavour Chips */}
+                {/* Clickable Flavour Chips */}
                 <div className="mini-flavour-chips-grid">
                   {availableFlavours.map(f => {
                     const isSelected = selectedSlots.includes(f);
@@ -214,10 +216,8 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
                 </div>
               </div>
             ) : (
-              <div className="popover-regular-content">
-                <p className="popover-desc">
-                  {product.description || product.longDescription}
-                </p>
+              <div className="card-pop-regular">
+                <p className="product-desc pop-desc">{product.description}</p>
                 {product.customisationOptions && product.customisationOptions.length > 0 && (
                   <div className="popover-options-group">
                     <span className="popover-opt-label">Options:</span>
@@ -237,49 +237,51 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
                 )}
               </div>
             )}
-          </div>
 
-          {/* Footer Action Bar: Quantity + Add to Cart - Zero Scrolling! */}
-          <div className="popover-footer">
-            <div className="popover-qty-selector">
-              <button 
-                type="button" 
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                aria-label="Decrease quantity"
+            {/* Cart Details Footer: Quantity + Add to Cart - Zero Scrolling! */}
+            <div className="card-pop-footer">
+              <span className="product-price pop-price">₹{product.price}</span>
+
+              <div className="popover-qty-selector">
+                <button 
+                  type="button" 
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  aria-label="Decrease quantity"
+                >
+                  <Minus size={13} />
+                </button>
+                <span className="popover-qty-val">{quantity}</span>
+                <button 
+                  type="button" 
+                  onClick={() => setQuantity(quantity + 1)}
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={13} />
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className={`btn btn-primary pop-add-btn ${justAdded ? 'btn-added' : ''}`}
+                onClick={handleOrder}
+                disabled={isAssorted && selectedSlots.length !== capacity}
               >
-                <Minus size={13} />
-              </button>
-              <span className="popover-qty-val">{quantity}</span>
-              <button 
-                type="button" 
-                onClick={() => setQuantity(quantity + 1)}
-                aria-label="Increase quantity"
-              >
-                <Plus size={13} />
+                {justAdded ? (
+                  <>
+                    <Check size={15} /> Added!
+                  </>
+                ) : isAssorted && selectedSlots.length < capacity ? (
+                  `Pick ${capacity - selectedSlots.length} more`
+                ) : (
+                  <>
+                    <ShoppingBag size={14} /> Add • ₹{product.price * quantity}
+                  </>
+                )}
               </button>
             </div>
-
-            <button
-              type="button"
-              className={`btn btn-primary popover-add-btn ${justAdded ? 'btn-added' : ''}`}
-              onClick={handleOrder}
-              disabled={isAssorted && selectedSlots.length !== capacity}
-            >
-              {justAdded ? (
-                <>
-                  <Check size={16} /> Added!
-                </>
-              ) : isAssorted && selectedSlots.length < capacity ? (
-                `Pick ${capacity - selectedSlots.length} more`
-              ) : (
-                <>
-                  <ShoppingBag size={15} /> Add • ₹{product.price * quantity}
-                </>
-              )}
-            </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

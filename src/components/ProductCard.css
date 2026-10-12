@@ -184,141 +184,106 @@
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-/* In-Card Quick Popover */
+/* Card Popped-Open State - Keeps exact card size and full-size polaroid picture */
 .product-card.popover-active {
-  z-index: 50;
-  transform: none !important;
-}
-
-.product-card-popover {
-  position: absolute;
-  inset: 0;
-  background-color: inherit;
-  border-radius: 8px;
   z-index: 30;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
-  animation: cardPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px) rotate(0deg) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
 }
 
-.product-card-popover::before {
-  content: '';
+.card-pop-close-btn {
   position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-2deg);
-  width: 48px;
-  height: 18px;
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  border-radius: 2px;
-  pointer-events: none;
-}
-
-@keyframes cardPopIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.popover-close-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  width: 22px;
-  height: 22px;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-dark-chocolate);
+  color: var(--color-forest);
   cursor: pointer;
-  z-index: 15;
-  transition: all 0.15s;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.popover-close-btn:hover {
+.card-pop-close-btn:hover {
   background: white;
   color: #c62828;
   transform: scale(1.1);
 }
 
-.popover-header {
-  margin-bottom: 6px;
-  border-bottom: 1px dashed rgba(6, 75, 53, 0.15);
-  padding-bottom: 6px;
-  flex-shrink: 0;
-}
-
-.popover-media-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-right: 20px; /* Leave room for close button */
-}
-
-.popover-thumb-container {
-  width: 58px;
-  height: 58px;
-  background: white;
-  padding: 3px;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-  flex-shrink: 0;
-}
-
-.popover-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 2px;
-}
-
-.popover-meta {
-  flex: 1;
+.card-pop-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  flex: 1;
 }
 
-.popover-title {
-  font-family: var(--font-heading);
-  font-size: 0.88rem;
-  color: var(--color-forest);
-  margin: 0;
-  line-height: 1.2;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.pop-desc {
+  font-size: 0.85rem;
+  line-height: 1.35;
+  margin-bottom: 8px;
+  color: rgba(6, 75, 53, 0.9);
 }
 
-.popover-price-bar {
+.card-pop-footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
+  margin-top: auto;
+  border-top: 1px dashed rgba(6, 75, 53, 0.15);
+  padding-top: 8px;
 }
 
-.popover-price {
+.pop-price {
   font-family: var(--font-handwriting);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--color-dark-chocolate);
   line-height: 1;
+}
+
+.pop-add-btn {
+  flex: 1;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(6, 75, 53, 0.2);
+}
+
+.pop-add-btn:disabled {
+  opacity: 0.55;
+  background-color: #888 !important;
+  cursor: not-allowed;
+}
+
+.pop-add-btn.btn-added {
+  background-color: #2e7d32 !important;
+  color: white !important;
+}
+
+.popover-assorted-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.popover-assorted-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-forest);
 }
 
 .popover-preset-chip {
@@ -339,26 +304,6 @@
 .popover-preset-chip:hover {
   background: var(--color-caramel);
   color: white;
-}
-
-.popover-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  padding-right: 2px;
-}
-
-.popover-desc {
-  font-size: 0.76rem;
-  color: rgba(6, 75, 53, 0.85);
-  line-height: 1.3;
-  margin: 0 0 6px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .popover-options-group {
@@ -397,7 +342,7 @@
   border-color: var(--color-forest);
 }
 
-/* Assorted Mini Builder inside Popover */
+/* Assorted Mini Builder inside Card */
 .popover-assorted-builder {
   display: flex;
   flex-direction: column;
@@ -511,17 +456,6 @@
   text-overflow: ellipsis;
 }
 
-/* Popover Footer Action Row */
-.popover-footer {
-  margin-top: auto;
-  padding-top: 5px;
-  border-top: 1px dashed rgba(6, 75, 53, 0.15);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
 .popover-qty-selector {
   display: inline-flex;
   align-items: center;
@@ -529,12 +463,12 @@
   border-radius: 6px;
   background: white;
   overflow: hidden;
-  height: 30px;
+  height: 32px;
   flex-shrink: 0;
 }
 
 .popover-qty-selector button {
-  width: 22px;
+  width: 24px;
   height: 100%;
   background: rgba(255, 255, 255, 0.9);
   border: none;
@@ -551,35 +485,9 @@
 }
 
 .popover-qty-val {
-  width: 20px;
+  width: 22px;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--color-forest);
-}
-
-.popover-add-btn {
-  flex: 1;
-  height: 30px;
-  padding: 0 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  border-radius: 6px;
-  white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(6, 75, 53, 0.2);
-}
-
-.popover-add-btn:disabled {
-  opacity: 0.55;
-  background-color: #888 !important;
-  cursor: not-allowed;
-}
-
-.popover-add-btn.btn-added {
-  background-color: #2e7d32 !important;
-  color: white !important;
 }
