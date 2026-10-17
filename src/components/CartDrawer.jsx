@@ -2,10 +2,53 @@ import React, { useState } from 'react';
 import { 
   X, Minus, Plus, ShoppingBag, CalendarClock, MapPin, 
   Navigation, Truck, Store, CheckCircle2, AlertCircle, 
-  Crosshair, Loader2, ExternalLink, Check, Sparkles
+  Crosshair, Loader2, ExternalLink, Check, Sparkles, Clock
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './CartDrawer.css';
+
+// Helpers for 2-hour minimum baking & preparation time window
+const getTwoHoursFromNow = () => new Date(Date.now() + 2 * 60 * 60 * 1000);
+
+const formatToLocalDateTimeInput = (date) => {
+  if (!date || isNaN(date.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+const formatReadableTime = (date) => {
+  if (!date || isNaN(date.getTime())) return '';
+  const now = new Date();
+  const isToday = now.toDateString() === date.toDateString();
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isTomorrow = tomorrow.toDateString() === date.toDateString();
+
+  const timeString = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  if (isToday) {
+    return `Today at ${timeString}`;
+  } else if (isTomorrow) {
+    return `Tomorrow at ${timeString}`;
+  } else {
+    const dateString = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return `${dateString} at ${timeString}`;
+  }
+};
+
+const isBeforeTwoHours = (dateValue) => {
+  if (!dateValue) return false;
+  const time = new Date(dateValue).getTime();
+  if (isNaN(time)) return false;
+  const minAllowed = Date.now() + 2 * 60 * 60 * 1000;
+  return time < minAllowed - 60000; // 1-minute buffer for clock precision
+};
 
 const CartDrawer = () => {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, cartTotal } = useCart();
@@ -20,6 +63,44 @@ const CartDrawer = () => {
   const [locationStatus, setLocationStatus] = useState(''); // 'success' | 'denied' | 'unavailable' | 'timeout' | ''
   const [locationErrorDetail, setLocationErrorDetail] = useState('');
   const [formError, setFormError] = useState('');
+  const [timeWarning, setTimeWarning] = useState('');
+
+  const handleDateChange = (val) => {
+    setDeliveryDate(val);
+    if (!val) {
+      setTimeWarning('');
+      if (formError && formError.toLowerCase().includes('preparation')) {
+        setFormError('');
+      }
+      return;
+    }
+
+    if (isBeforeTwoHours(val)) {
+      const minTimeStr = formatReadableTime(getTwoHoursFromNow());
+      setTimeWarning(`Minimum 2 hours preparation time required! Our treats are baked fresh to order. Please select a time after ${minTimeStr}.`);
+    } else {
+      setTimeWarning('');
+      if (formError && formError.toLowerCase().includes('preparation')) {
+        setFormError('');
+      }
+    }
+  };
+
+  const handleDateFocus = () => {
+    if (deliveryDate && isBeforeTwoHours(deliveryDate)) {
+      const minTimeStr = formatReadableTime(getTwoHoursFromNow());
+      setTimeWarning(`Minimum 2 hours preparation time required! Our treats are baked fresh to order. Please select a time after ${minTimeStr}.`);
+    }
+  };
+
+  const handleSetEarliestTime = () => {
+    const earliestDate = getTwoHoursFromNow();
+    setDeliveryDate(formatToLocalDateTimeInput(earliestDate));
+    setTimeWarning('');
+    if (formError && formError.toLowerCase().includes('preparation')) {
+      setFormError('');
+    }
+  };
 
   // Fast Two-Stage Progressive GPS engine (Instant fix + background refinement)
   const handleGetLocation = () => {
@@ -219,6 +300,16 @@ const CartDrawer = () => {
       setFormError('Please enter your delivery address (Flat / House No, Street, Area) for Porter.');
       return;
     }
+
+    // Minimum 2-hour preparation time validation
+    if (deliveryDate && isBeforeTwoHours(deliveryDate)) {
+      const minTimeStr = formatReadableTime(getTwoHoursFromNow());
+      const prepError = `Minimum 2 hours preparation time required! Our treats are baked fresh to order. Earliest available ${orderType === 'porter' ? 'delivery' : 'pickup'} is after ${minTimeStr}.`;
+      setTimeWarning(prepError);
+      setFormError(prepError);
+      return;
+    }
+
     setFormError('');
     
     // Format message
@@ -238,8 +329,11 @@ const CartDrawer = () => {
     if (orderType === 'porter') {
       message += `*Fulfillment Method:* 🛵 Delivery via Porter%0A`;
       if (deliveryDate) {
-        const formattedDate = new Date(deliveryDate).toLocaleString();
+        const formattedDate = formatReadableTime(new Date(deliveryDate)) || new Date(deliveryDate).toLocaleString();
         message += `*Requested Delivery Time:* ${encodeURIComponent(formattedDate)}%0A`;
+      } else {
+        const earliestStr = formatReadableTime(getTwoHoursFromNow());
+        message += `*Requested Delivery Time:* Earliest available (~${encodeURIComponent(earliestStr)}, min. 2 hrs prep)%0A`;
       }
       if (deliveryAddress) {
         message += `*Delivery Address:* ${encodeURIComponent(deliveryAddress)}%0A`;
@@ -253,8 +347,11 @@ const CartDrawer = () => {
     } else {
       message += `*Fulfillment Method:* 🛍️ Self Pick up%0A`;
       if (deliveryDate) {
-        const formattedDate = new Date(deliveryDate).toLocaleString();
+        const formattedDate = formatReadableTime(new Date(deliveryDate)) || new Date(deliveryDate).toLocaleString();
         message += `*Requested Pickup Time:* ${encodeURIComponent(formattedDate)}%0A`;
+      } else {
+        const earliestStr = formatReadableTime(getTwoHoursFromNow());
+        message += `*Requested Pickup Time:* Earliest available (~${encodeURIComponent(earliestStr)}, min. 2 hrs prep)%0A`;
       }
       if (pickupNotes) {
         message += `*Pickup Notes:* ${encodeURIComponent(pickupNotes)}%0A`;
@@ -376,17 +473,52 @@ const CartDrawer = () => {
             {/* Conditional Input Fields */}
             <div className="cart-inputs-container">
               
-              {/* Date & Time */}
-              <div className="cart-input-group">
-                <label>
-                  <CalendarClock size={14} /> 
-                  {orderType === 'porter' ? 'Delivery Date & Time (Optional)' : 'Pickup Date & Time (Optional)'}
-                </label>
-                <input 
-                  type="datetime-local" 
-                  value={deliveryDate}
-                  onChange={(e) => setDeliveryDate(e.target.value)}
-                />
+              {/* Date & Time with 2-Hour Minimum Preparation Notice */}
+              <div className="cart-input-group timing-input-group">
+                <div className="cart-input-header">
+                  <label htmlFor="delivery-datetime-input">
+                    <CalendarClock size={15} /> 
+                    {orderType === 'porter' ? 'Delivery Date & Time' : 'Pickup Date & Time'}
+                  </label>
+                  <span className="prep-time-pill" title="All treats are baked fresh to order">
+                    <Clock size={11} /> Min. 2h prep
+                  </span>
+                </div>
+
+                <div className="datetime-field-wrapper">
+                  <input 
+                    id="delivery-datetime-input"
+                    type="datetime-local" 
+                    min={formatToLocalDateTimeInput(getTwoHoursFromNow())}
+                    value={deliveryDate}
+                    onChange={(e) => handleDateChange(e.target.value)}
+                    onFocus={handleDateFocus}
+                    className={`datetime-input ${timeWarning ? 'has-error' : ''}`}
+                  />
+                  <button 
+                    type="button" 
+                    className="btn-earliest-time"
+                    onClick={handleSetEarliestTime}
+                    title="Quickly select the earliest delivery slot (2 hours from now)"
+                  >
+                    ⚡ Earliest (+2h)
+                  </button>
+                </div>
+
+                {/* Preparation Time Warning / Explanatory Notice */}
+                {timeWarning ? (
+                  <div className="time-warning-banner animate-fade-in" role="alert">
+                    <AlertCircle size={16} className="time-warning-icon" />
+                    <div className="time-warning-content">
+                      <div className="time-warning-heading">Preparation Time Required</div>
+                      <div className="time-warning-body">{timeWarning}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="time-helper-info">
+                    <span>✨ Freshly baked to order. Earliest available: <strong>{formatReadableTime(getTwoHoursFromNow())}</strong></span>
+                  </div>
+                )}
               </div>
 
               {/* Porter Specific: Address and Maps */}
