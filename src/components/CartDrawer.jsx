@@ -7,8 +7,8 @@ import {
 import { useCart } from '../context/CartContext';
 import './CartDrawer.css';
 
-// Helpers for 2-hour minimum baking & preparation time window
-const getTwoHoursFromNow = () => new Date(Date.now() + 2 * 60 * 60 * 1000);
+// Helpers for 3-hour minimum baking & preparation time window
+const getThreeHoursFromNow = () => new Date(Date.now() + 3 * 60 * 60 * 1000);
 
 const formatToLocalDateTimeInput = (date) => {
   if (!date || isNaN(date.getTime())) return '';
@@ -42,11 +42,11 @@ const formatReadableTime = (date) => {
   }
 };
 
-const isBeforeTwoHours = (dateValue) => {
+const isBeforeThreeHours = (dateValue) => {
   if (!dateValue) return false;
   const time = new Date(dateValue).getTime();
   if (isNaN(time)) return false;
-  const minAllowed = Date.now() + 2 * 60 * 60 * 1000;
+  const minAllowed = Date.now() + 3 * 60 * 60 * 1000;
   return time < minAllowed - 60000; // 1-minute buffer for clock precision
 };
 
@@ -75,9 +75,9 @@ const CartDrawer = () => {
       return;
     }
 
-    if (isBeforeTwoHours(val)) {
-      const minTimeStr = formatReadableTime(getTwoHoursFromNow());
-      setTimeWarning(`Minimum 2 hours preparation time required! Our treats are baked fresh to order. Please select a time after ${minTimeStr}.`);
+    if (isBeforeThreeHours(val)) {
+      const minTimeStr = formatReadableTime(getThreeHoursFromNow());
+      setTimeWarning(`Minimum 3 hours preparation time required! Our treats are baked fresh to order. Please select a time after ${minTimeStr}.`);
     } else {
       setTimeWarning('');
       if (formError && formError.toLowerCase().includes('preparation')) {
@@ -87,14 +87,14 @@ const CartDrawer = () => {
   };
 
   const handleDateFocus = () => {
-    if (deliveryDate && isBeforeTwoHours(deliveryDate)) {
-      const minTimeStr = formatReadableTime(getTwoHoursFromNow());
-      setTimeWarning(`Minimum 2 hours preparation time required! Our treats are baked fresh to order. Please select a time after ${minTimeStr}.`);
+    if (deliveryDate && isBeforeThreeHours(deliveryDate)) {
+      const minTimeStr = formatReadableTime(getThreeHoursFromNow());
+      setTimeWarning(`Minimum 3 hours preparation time required! Our treats are baked fresh to order. Please select a time after ${minTimeStr}.`);
     }
   };
 
   const handleSetEarliestTime = () => {
-    const earliestDate = getTwoHoursFromNow();
+    const earliestDate = getThreeHoursFromNow();
     setDeliveryDate(formatToLocalDateTimeInput(earliestDate));
     setTimeWarning('');
     if (formError && formError.toLowerCase().includes('preparation')) {
@@ -301,10 +301,10 @@ const CartDrawer = () => {
       return;
     }
 
-    // Minimum 2-hour preparation time validation
-    if (deliveryDate && isBeforeTwoHours(deliveryDate)) {
-      const minTimeStr = formatReadableTime(getTwoHoursFromNow());
-      const prepError = `Minimum 2 hours preparation time required! Our treats are baked fresh to order. Earliest available ${orderType === 'porter' ? 'delivery' : 'pickup'} is after ${minTimeStr}.`;
+    // Minimum 3-hour preparation time validation
+    if (deliveryDate && isBeforeThreeHours(deliveryDate)) {
+      const minTimeStr = formatReadableTime(getThreeHoursFromNow());
+      const prepError = `Minimum 3 hours preparation time required! Our treats are baked fresh to order. Earliest available ${orderType === 'porter' ? 'delivery' : 'pickup'} is after ${minTimeStr}.`;
       setTimeWarning(prepError);
       setFormError(prepError);
       return;
@@ -332,8 +332,8 @@ const CartDrawer = () => {
         const formattedDate = formatReadableTime(new Date(deliveryDate)) || new Date(deliveryDate).toLocaleString();
         message += `*Requested Delivery Time:* ${encodeURIComponent(formattedDate)}%0A`;
       } else {
-        const earliestStr = formatReadableTime(getTwoHoursFromNow());
-        message += `*Requested Delivery Time:* Earliest available (~${encodeURIComponent(earliestStr)}, min. 2 hrs prep)%0A`;
+        const earliestStr = formatReadableTime(getThreeHoursFromNow());
+        message += `*Requested Delivery Time:* Earliest available (~${encodeURIComponent(earliestStr)}, min. 3 hrs prep)%0A`;
       }
       if (deliveryAddress) {
         message += `*Delivery Address:* ${encodeURIComponent(deliveryAddress)}%0A`;
@@ -350,8 +350,8 @@ const CartDrawer = () => {
         const formattedDate = formatReadableTime(new Date(deliveryDate)) || new Date(deliveryDate).toLocaleString();
         message += `*Requested Pickup Time:* ${encodeURIComponent(formattedDate)}%0A`;
       } else {
-        const earliestStr = formatReadableTime(getTwoHoursFromNow());
-        message += `*Requested Pickup Time:* Earliest available (~${encodeURIComponent(earliestStr)}, min. 2 hrs prep)%0A`;
+        const earliestStr = formatReadableTime(getThreeHoursFromNow());
+        message += `*Requested Pickup Time:* Earliest available (~${encodeURIComponent(earliestStr)}, min. 3 hrs prep)%0A`;
       }
       if (pickupNotes) {
         message += `*Pickup Notes:* ${encodeURIComponent(pickupNotes)}%0A`;
@@ -473,7 +473,7 @@ const CartDrawer = () => {
             {/* Conditional Input Fields */}
             <div className="cart-inputs-container">
               
-              {/* Date & Time with 2-Hour Minimum Preparation Notice */}
+              {/* Date & Time with 3-Hour Minimum Preparation Notice */}
               <div className="cart-input-group timing-input-group">
                 <div className="cart-input-header">
                   <label htmlFor="delivery-datetime-input">
@@ -481,7 +481,7 @@ const CartDrawer = () => {
                     {orderType === 'porter' ? 'Delivery Date & Time' : 'Pickup Date & Time'}
                   </label>
                   <span className="prep-time-pill" title="All treats are baked fresh to order">
-                    <Clock size={11} /> Min. 2h prep
+                    <Clock size={11} /> Min. 3h prep
                   </span>
                 </div>
 
@@ -489,7 +489,7 @@ const CartDrawer = () => {
                   <input 
                     id="delivery-datetime-input"
                     type="datetime-local" 
-                    min={formatToLocalDateTimeInput(getTwoHoursFromNow())}
+                    min={formatToLocalDateTimeInput(getThreeHoursFromNow())}
                     value={deliveryDate}
                     onChange={(e) => handleDateChange(e.target.value)}
                     onFocus={handleDateFocus}
@@ -499,9 +499,9 @@ const CartDrawer = () => {
                     type="button" 
                     className="btn-earliest-time"
                     onClick={handleSetEarliestTime}
-                    title="Quickly select the earliest delivery slot (2 hours from now)"
+                    title="Quickly select the earliest delivery slot (3 hours from now)"
                   >
-                    ⚡ Earliest (+2h)
+                    ⚡ Earliest (+3h)
                   </button>
                 </div>
 
@@ -516,7 +516,7 @@ const CartDrawer = () => {
                   </div>
                 ) : (
                   <div className="time-helper-info">
-                    <span>✨ Freshly baked to order. Earliest available: <strong>{formatReadableTime(getTwoHoursFromNow())}</strong></span>
+                    <span>✨ Freshly baked to order. Earliest available: <strong>{formatReadableTime(getThreeHoursFromNow())}</strong></span>
                   </div>
                 )}
               </div>
