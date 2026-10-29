@@ -96,9 +96,16 @@
 }
 
 .cart-item-options {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 4px;
+  font-size: 0.78rem;
+  color: var(--color-forest);
+  background: #fdf6ec;
+  border: 1px solid #f2dfc7;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  line-height: 1.35;
+  font-weight: 600;
+  word-break: break-word;
 }
 
 .cart-item-price {

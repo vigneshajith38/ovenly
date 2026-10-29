@@ -3,7 +3,7 @@ import { ShoppingBag, X, Plus, Minus, Check, Sparkles } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './ProductCard.css';
 
-const DEFAULT_ASSORTED_FLAVOURS = [
+const DEFAULT_COOKIE_FLAVOURS = [
   'Signature Chocolate Chip',
   'Double Chocolate Fudge',
   'Red Velvet White Choc',
@@ -12,25 +12,54 @@ const DEFAULT_ASSORTED_FLAVOURS = [
   'Salted Caramel Crisp'
 ];
 
-const ProductCard = ({ product, cookieTinOptions = [] }) => {
+const DEFAULT_BROWNIE_FLAVOURS = [
+  'Nutella',
+  'Chocolate Ganache',
+  'Biscoff'
+];
+
+const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const cardRef = useRef(null);
   const { addToCart } = useCart();
 
-  const isAssorted = product.is_custom_assorted || product.isCustomAssorted;
-  const capacity = product.assorted_capacity || product.assortedCapacity || 3;
-
-  // Assorted tin flavours
-  const availableFlavours = (
-    (cookieTinOptions && cookieTinOptions.length > 0 ? cookieTinOptions : null) ||
-    product.assorted_flavours ||
-    product.assortedFlavours ||
-    DEFAULT_ASSORTED_FLAVOURS
+  const isBrownie = Boolean(
+    (product.category && product.category.toLowerCase().includes('brownie')) ||
+    (product.name && product.name.toLowerCase().includes('brownie'))
   );
 
-  // Assorted selected slots (array of flavours, max capacity)
+  const isPackOf4 = Boolean(
+    product.name && (product.name.toLowerCase().includes('pack of 4') || product.name.toLowerCase().includes('box of 4'))
+  );
+
+  const isAssorted = product.is_custom_assorted || product.isCustomAssorted || isPackOf4;
+  const capacity = product.assorted_capacity || product.assortedCapacity || (isPackOf4 ? 4 : (isBrownie ? 3 : 3));
+
+  // Flour choice for all brownies (Classic Maida vs Healthy Ragi)
+  const hasFlourChoice = isBrownie || product.has_flour_choice || product.hasFlourChoice;
+  const flourOptions = product.flourOptions || ['Classic Maida', 'Healthy Ragi'];
+  const [selectedFlour, setSelectedFlour] = useState('Classic Maida');
+
+  // Piece count display
+  const pieceCount = product.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : (product.pieces ? `${product.pieces} Pieces` : null)));
+
+  // Available flavours: NEVER show cookies on brownies!
+  const isCookieDefault = (arr) => Array.isArray(arr) && arr.includes('Signature Chocolate Chip');
+
+  let availableFlavours = [];
+  if (Array.isArray(product.assorted_flavours) && product.assorted_flavours.length > 0 && !(isBrownie && isCookieDefault(product.assorted_flavours))) {
+    availableFlavours = product.assorted_flavours;
+  } else if (Array.isArray(product.assortedFlavours) && product.assortedFlavours.length > 0 && !(isBrownie && isCookieDefault(product.assortedFlavours))) {
+    availableFlavours = product.assortedFlavours;
+  } else if (isBrownie) {
+    availableFlavours = brownieOptions && brownieOptions.length > 0 ? brownieOptions : DEFAULT_BROWNIE_FLAVOURS;
+  } else {
+    availableFlavours = cookieTinOptions && cookieTinOptions.length > 0 ? cookieTinOptions : DEFAULT_COOKIE_FLAVOURS;
+  }
+
+  // Assorted selected slots (array of flavours, up to capacity)
   const [selectedSlots, setSelectedSlots] = useState([]);
 
   // Regular customization options
@@ -65,14 +94,16 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
     setIsPopoverOpen(false);
   };
 
-  // Toggle flavour in assorted slots
+  // Add or cycle flavour in assorted slots
   const handleToggleFlavour = (flavour) => {
-    const existingIndex = selectedSlots.indexOf(flavour);
-    if (existingIndex > -1) {
-      setSelectedSlots(selectedSlots.filter((_, idx) => idx !== existingIndex));
+    if (selectedSlots.length < capacity) {
+      // Add flavour to the next empty slot
+      setSelectedSlots([...selectedSlots, flavour]);
     } else {
-      if (selectedSlots.length < capacity) {
-        setSelectedSlots([...selectedSlots, flavour]);
+      // If full and this flavour is present, remove one instance of it
+      if (selectedSlots.includes(flavour)) {
+        const lastIdx = selectedSlots.lastIndexOf(flavour);
+        setSelectedSlots(selectedSlots.filter((_, idx) => idx !== lastIdx));
       }
     }
   };
@@ -81,21 +112,53 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
     setSelectedSlots(selectedSlots.filter((_, idx) => idx !== index));
   };
 
-  const applyTop3Preset = (e) => {
+  // Top preset: intelligently distribute flavours to match capacity
+  const applyTopPreset = (e) => {
     e.stopPropagation();
-    setSelectedSlots(availableFlavours.slice(0, capacity));
+    if (isBrownie && capacity === 4 && availableFlavours.length >= 3) {
+      // 2 Classic Fudge + 1 Walnut + 1 Caramel
+      setSelectedSlots([
+        availableFlavours[0],
+        availableFlavours[0],
+        availableFlavours[1],
+        availableFlavours[2]
+      ]);
+    } else {
+      const preset = [];
+      for (let i = 0; i < capacity; i++) {
+        preset.push(availableFlavours[i % availableFlavours.length]);
+      }
+      setSelectedSlots(preset);
+    }
   };
 
   const handleOrder = (e) => {
     e.stopPropagation();
     if (isAssorted && selectedSlots.length !== capacity) return;
 
-    let finalOptions = '';
-    if (isAssorted) {
-      finalOptions = `Custom Assorted (${capacity} Flavours): ${selectedSlots.join(', ')}`;
-    } else {
-      finalOptions = selectedCustomisation || '';
+    const parts = [];
+    if (hasFlourChoice && selectedFlour) {
+      parts.push(`Base: ${selectedFlour}`);
     }
+
+    if (isAssorted) {
+      const countMap = {};
+      selectedSlots.forEach(s => {
+        countMap[s] = (countMap[s] || 0) + 1;
+      });
+      const breakdown = Object.entries(countMap)
+        .map(([name, cnt]) => cnt > 1 ? `${cnt}x ${name}` : name)
+        .join(', ');
+      parts.push(`Custom Assorted (${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}): ${breakdown}`);
+    } else if (selectedCustomisation) {
+      parts.push(selectedCustomisation);
+    }
+
+    if (pieceCount && !isAssorted) {
+      parts.push(pieceCount);
+    }
+
+    const finalOptions = parts.join(' • ');
 
     addToCart(product, quantity, finalOptions);
     setJustAdded(true);
@@ -110,7 +173,7 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
       ref={cardRef}
       className={`product-card ${isAssorted ? 'assorted-product-card' : ''} ${isPopoverOpen ? 'popover-active' : ''}`}
     >
-      {/* Product Image: EXACT SAME FULL SIZE POLAROID PICTURE */}
+      {/* Product Image */}
       <div 
         className="product-image-container" 
         onClick={!isPopoverOpen ? handleOpenPopover : undefined}
@@ -118,15 +181,22 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
         <img src={product.image} alt={product.name} className="product-image" />
         {!product.available && <div className="product-overlay">Sold Out</div>}
         
-        {isAssorted && !isPopoverOpen && (
+        {/* Badges on product image */}
+        {!isPopoverOpen && (
           <div className="product-badges-container">
-            <span className="assorted-badge">
-              ✨ Pick Any 3 Flavours
-            </span>
+            {isAssorted ? (
+              <span className="assorted-badge">
+                ✨ Pick Any {capacity} {isBrownie ? 'Pieces' : 'Flavours'}
+              </span>
+            ) : pieceCount ? (
+              <span className="piece-count-badge">
+                {isBrownie ? '🍫' : '📦'} {pieceCount}
+              </span>
+            ) : null}
           </div>
         )}
 
-        {/* When card is popped open: cute close button on the picture */}
+        {/* Close button on image when popped open */}
         {isPopoverOpen && (
           <button 
             type="button" 
@@ -139,7 +209,7 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
         )}
       </div>
 
-      {/* Product Info: Same Card Size, with Smooth Cart Expansion */}
+      {/* Product Info */}
       <div className="product-info">
         <h3 
           className="product-title" 
@@ -152,6 +222,21 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
           /* Normal Default State */
           <>
             <p className="product-desc">{product.description}</p>
+            
+            {/* Piece count pill if applicable */}
+            {pieceCount && (
+              <div className="card-piece-info-row">
+                <span className="card-piece-tag">
+                  {isBrownie ? '🍫' : '📦'} {pieceCount}
+                </span>
+                {hasFlourChoice && (
+                  <span className="card-flour-tag">
+                    🌾 Choice of Maida / Ragi
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="product-footer">
               <span className="product-price">₹{product.price}</span>
               <button 
@@ -159,24 +244,49 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
                 onClick={handleOpenPopover}
                 disabled={!product.available}
               >
-                {product.available ? (isAssorted ? '✨ Pick 3 Flavours' : 'View Details') : 'Sold Out'}
+                {product.available ? (isAssorted ? `✨ Pick ${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}` : 'View Details') : 'Sold Out'}
               </button>
             </div>
           </>
         ) : (
-          /* Popped Open State: Exact same card, exact same pic, cart details right here! */
+          /* Popped Open Quick Builder / Customization State */
           <div className="card-pop-details animate-fade-in" onClick={e => e.stopPropagation()}>
+            
+            {/* Flour Base Selector (Maida vs Ragi) for Brownies */}
+            {hasFlourChoice && (
+              <div className="mini-flour-group">
+                <span className="mini-flour-label">Flour Base:</span>
+                <div className="mini-flour-pills">
+                  {flourOptions.map(flour => (
+                    <button
+                      key={flour}
+                      type="button"
+                      className={`mini-flour-btn ${selectedFlour === flour ? 'active' : ''}`}
+                      onClick={() => setSelectedFlour(flour)}
+                    >
+                      {flour === 'Healthy Ragi' ? '🌱' : '🌾'} {flour}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {isAssorted ? (
               <div className="popover-assorted-builder">
                 <div className="popover-assorted-header-row">
-                  <span className="popover-assorted-label">Choose 3 Flavours:</span>
-                  <button type="button" onClick={applyTop3Preset} className="popover-preset-chip">
-                    <Sparkles size={11} /> Top 3 Mix
+                  <span className="popover-assorted-label">
+                    Choose {capacity} {isBrownie ? 'Pieces (3 Flavours)' : 'Flavours'}:
+                  </span>
+                  <button type="button" onClick={applyTopPreset} className="popover-preset-chip">
+                    <Sparkles size={11} /> Top {capacity} Mix
                   </button>
                 </div>
 
-                {/* 3 Visual Slots */}
-                <div className="mini-slots-bar">
+                {/* Visual Slots Bar */}
+                <div 
+                  className="mini-slots-bar" 
+                  style={{ gridTemplateColumns: `repeat(${capacity}, 1fr)` }}
+                >
                   {Array.from({ length: capacity }).map((_, i) => {
                     const flv = selectedSlots[i];
                     return (
@@ -188,7 +298,7 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
                       >
                         <span className="mini-slot-num">{i + 1}</span>
                         <span className="mini-slot-name">
-                          {flv ? flv.replace(/ Cookie Tin| Cookies| Tin/gi, '') : '+ Pick'}
+                          {flv ? flv.replace(/ Cookie Tin| Cookies| Tin| Brownie/gi, '').trim() : '+ Pick'}
                         </span>
                         {flv && <span className="mini-slot-x">✕</span>}
                       </div>
@@ -196,19 +306,19 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
                   })}
                 </div>
 
-                {/* Clickable Flavour Chips */}
+                {/* Clickable Flavour Chips with Count */}
                 <div className="mini-flavour-chips-grid">
                   {availableFlavours.map(f => {
-                    const isSelected = selectedSlots.includes(f);
-                    const cleanName = f.replace(/ Cookie Tin| Cookies| Tin/gi, '');
+                    const count = selectedSlots.filter(s => s === f).length;
+                    const cleanName = f.replace(/ Cookie Tin| Cookies| Tin| Brownie/gi, '').trim();
                     return (
                       <button
                         key={f}
                         type="button"
-                        className={`mini-flavour-chip ${isSelected ? 'active' : ''}`}
+                        className={`mini-flavour-chip ${count > 0 ? 'active' : ''}`}
                         onClick={() => handleToggleFlavour(f)}
                       >
-                        <span className="chip-indicator">{isSelected ? '✓' : '+'}</span>
+                        <span className="chip-indicator">{count > 0 ? count : '+'}</span>
                         <span className="chip-name">{cleanName}</span>
                       </button>
                     );
@@ -238,7 +348,7 @@ const ProductCard = ({ product, cookieTinOptions = [] }) => {
               </div>
             )}
 
-            {/* Cart Details Footer: Quantity + Add to Cart - Zero Scrolling! */}
+            {/* Cart Details Footer */}
             <div className="card-pop-footer">
               <span className="product-price pop-price">₹{product.price}</span>
 

@@ -14,6 +14,8 @@ const AdminProducts = () => {
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('cookie-tins');
   const [dietaryType, setDietaryType] = useState('eggless'); // 'eggless' | 'contains_egg' | 'choice'
+  const [pieceCount, setPieceCount] = useState('');
+  const [hasFlourChoice, setHasFlourChoice] = useState(false);
   const [isCustomAssorted, setIsCustomAssorted] = useState(false);
   const [assortedCapacity, setAssortedCapacity] = useState(3);
   const [assortedFlavoursInput, setAssortedFlavoursInput] = useState(
@@ -49,18 +51,34 @@ const AdminProducts = () => {
 
   const openModal = (product = null) => {
     if (product) {
+      const isBrownieProd = Boolean(
+        (product.category && product.category.toLowerCase().includes('brownie')) || 
+        (product.name && product.name.toLowerCase().includes('brownie'))
+      );
+      const isPackOf4 = Boolean(
+        product.name && (product.name.toLowerCase().includes('pack of 4') || product.name.toLowerCase().includes('box of 4'))
+      );
+
       setCurrentProduct(product);
       setName(product.name);
       setDescription(product.description || '');
       setPrice(product.price);
-      setCategory(product.category || 'cookie-tins');
+      setCategory(product.category || (isBrownieProd ? 'brownies' : 'cookie-tins'));
       setDietaryType(product.dietary_type || 'eggless');
-      setIsCustomAssorted(product.is_custom_assorted || false);
-      setAssortedCapacity(product.assorted_capacity || 3);
+      setPieceCount(product.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : '')));
+      setHasFlourChoice(true);
+      setIsCustomAssorted(product.is_custom_assorted || isPackOf4 || false);
+      setAssortedCapacity(product.assorted_capacity || (isPackOf4 ? 4 : (isBrownieProd ? 3 : 3)));
       
-      const flavours = Array.isArray(product.assorted_flavours) 
-        ? product.assorted_flavours.join(', ')
+      const defaultFlavours = isBrownieProd
+        ? 'Nutella, chocolate ganache, biscoff'
         : 'Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp';
+
+      const isCookieDefault = Array.isArray(product.assorted_flavours) && product.assorted_flavours.includes('Signature Chocolate Chip');
+
+      const flavours = Array.isArray(product.assorted_flavours) && !(isBrownieProd && isCookieDefault)
+        ? product.assorted_flavours.join(', ')
+        : defaultFlavours;
       setAssortedFlavoursInput(flavours);
 
       setIsPublished(product.is_published);
@@ -74,6 +92,8 @@ const AdminProducts = () => {
       setPrice('');
       setCategory('cookie-tins');
       setDietaryType('eggless');
+      setPieceCount('');
+      setHasFlourChoice(false);
       setIsCustomAssorted(false);
       setAssortedCapacity(3);
       setAssortedFlavoursInput('Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp');
@@ -141,6 +161,8 @@ const AdminProducts = () => {
         productData.is_custom_assorted = true;
         productData.assorted_capacity = parseInt(assortedCapacity, 10) || 3;
         productData.assorted_flavours = flavoursArray;
+      } else {
+        productData.is_custom_assorted = false;
       }
 
       let saveError = null;
@@ -271,7 +293,10 @@ const AdminProducts = () => {
 {`ALTER TABLE products 
 ADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,
-ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb;`}
+ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb,
+ADD COLUMN IF NOT EXISTS piece_count TEXT,
+ADD COLUMN IF NOT EXISTS has_flour_choice BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb;`}
             </pre>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <button 
@@ -279,7 +304,7 @@ ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate 
                 className="btn btn-primary" 
                 style={{ padding: '7px 16px', fontSize: '0.85rem' }}
                 onClick={() => {
-                  navigator.clipboard.writeText(`ALTER TABLE products \nADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,\nADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb;`);
+                  navigator.clipboard.writeText(`ALTER TABLE products \nADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,\nADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb,\nADD COLUMN IF NOT EXISTS piece_count TEXT,\nADD COLUMN IF NOT EXISTS has_flour_choice BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb;`);
                   setCopiedSql(true);
                   setTimeout(() => setCopiedSql(false), 2500);
                 }}
@@ -325,16 +350,26 @@ ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate 
                 </td>
                 <td>
                   <strong>{product.name}</strong>
+                  {product.piece_count && (
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>
+                      📦 {product.piece_count}
+                    </span>
+                  )}
+                  {product.has_flour_choice && (
+                    <span style={{ display: 'inline-block', fontSize: '0.7rem', color: 'var(--color-forest)', background: '#edf7ee', padding: '1px 6px', borderRadius: '4px', marginTop: '3px', fontWeight: '600' }}>
+                      🌾 Maida / Ragi
+                    </span>
+                  )}
                   {product.is_custom_assorted && (
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-caramel)', fontWeight: 'bold' }}>
-                      ✨ Assorted Tin ({product.assorted_capacity || 3} Flavours)
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-caramel)', fontWeight: 'bold', marginTop: '2px' }}>
+                      ✨ Custom Assorted ({product.assorted_capacity || 3} {product.category === 'brownies' ? 'Pieces' : 'Flavours'})
                     </span>
                   )}
                 </td>
                 <td>
                   {product.is_custom_assorted ? (
                     <span className="badge success" style={{ background: '#fdf4eb', color: 'var(--color-caramel)', border: '1px solid #fed7aa' }}>
-                      ✨ Custom Mix ({product.assorted_capacity || 3} Flavours)
+                      ✨ Custom Mix ({product.assorted_capacity || 3} {product.category === 'brownies' ? 'Pieces' : 'Flavours'})
                     </span>
                   ) : (
                     <span style={{ color: '#888', fontSize: '0.85rem' }}>Standard</span>
@@ -392,43 +427,89 @@ ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate 
               </div>
 
               {/* Price & Category */}
-              <div style={{ display: 'flex', gap: '20px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
+              {/* Price, Category & Piece Count */}
+              <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                <div className="form-group" style={{ flex: 1, minWidth: '130px' }}>
                   <label>Price (₹) *</label>
                   <input type="number" required min="1" step="0.01" value={price} onChange={e => setPrice(e.target.value)} />
                 </div>
                 
-                <div className="form-group" style={{ flex: 1 }}>
+                <div className="form-group" style={{ flex: 1, minWidth: '150px' }}>
                   <label>Category</label>
-                  <select value={category} onChange={e => setCategory(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}>
+                  <select 
+                    value={category} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCategory(val);
+                      if (val === 'brownies') {
+                        setHasFlourChoice(true);
+                        if (!pieceCount) setPieceCount('9 Pieces (500g Slab)');
+                        if (isCustomAssorted) {
+                          setAssortedCapacity(4);
+                          setAssortedFlavoursInput('Signature Classic Fudge, Toasted Walnut Brownie, Salted Caramel Swirl Brownie');
+                        }
+                      }
+                    }} 
+                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
+                  >
                     <option value="cookie-tins">Cookie Tins</option>
-                    <option value="cupcakes">Cupcakes</option>
                     <option value="brownies">Brownies</option>
+                    <option value="cupcakes">Cupcakes</option>
                     <option value="specials">Specials</option>
                   </select>
                 </div>
+
+                <div className="form-group" style={{ flex: 1.2, minWidth: '180px' }}>
+                  <label>Piece Count / Pack Size</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. 9 Pieces (500g Slab), 4 Pieces, 12 Cookies" 
+                    value={pieceCount} 
+                    onChange={e => setPieceCount(e.target.value)} 
+                  />
+                </div>
               </div>
 
+              {/* Flour Choice Checkbox (Maida vs Ragi) */}
+              <div className="checkbox-group" style={{ marginBottom: '16px', background: '#f5f9f6', padding: '10px 14px', borderRadius: '8px', border: '1px solid #d4edd6' }}>
+                <input 
+                  type="checkbox" 
+                  id="hasFlourChoice" 
+                  checked={hasFlourChoice} 
+                  onChange={e => setHasFlourChoice(e.target.checked)} 
+                />
+                <label htmlFor="hasFlourChoice" style={{ fontWeight: '600', color: 'var(--color-forest)', cursor: 'pointer' }}>
+                  🌾 Flour Base Selection: Allow customer to choose between <strong>Classic Maida</strong> or <strong>Healthy Ragi</strong>
+                </label>
+              </div>
 
-
-              {/* Custom Assorted Tin Configuration */}
+              {/* Custom Assorted Configuration */}
               <div style={{ background: '#fcf8f2', border: '1px solid #f0e4d0', borderRadius: '12px', padding: '15px', marginBottom: '20px' }}>
                 <div className="checkbox-group" style={{ marginBottom: isCustomAssorted ? '12px' : '0' }}>
                   <input 
                     type="checkbox" 
                     id="isCustomAssorted" 
                     checked={isCustomAssorted} 
-                    onChange={e => setIsCustomAssorted(e.target.checked)} 
+                    onChange={e => {
+                      const checked = e.target.checked;
+                      setIsCustomAssorted(checked);
+                      if (checked && category === 'brownies') {
+                        setAssortedCapacity(4);
+                        setAssortedFlavoursInput('Signature Classic Fudge, Toasted Walnut Brownie, Salted Caramel Swirl Brownie');
+                      }
+                    }} 
                   />
                   <label htmlFor="isCustomAssorted" style={{ fontWeight: 'bold', color: 'var(--color-dark-chocolate)' }}>
-                    ✨ Custom Assorted Tin (Allow customers to pick their own mix of flavours)
+                    ✨ Custom Assorted Box / Tin (Allow customers to customize which flavours go into their box)
                   </label>
                 </div>
 
                 {isCustomAssorted && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                     <div className="form-group" style={{ marginBottom: '5px' }}>
-                      <label style={{ fontSize: '0.85rem' }}>Tin Capacity (Number of flavours, e.g. 3)</label>
+                      <label style={{ fontSize: '0.85rem' }}>
+                        Capacity (Number of pieces/flavours, e.g. 4 for Brownie Box of 4, 3 for Cookie Tin)
+                      </label>
                       <input 
                         type="number" 
                         min="2" 
@@ -439,12 +520,12 @@ ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate 
                       />
                     </div>
                     <div className="form-group" style={{ marginBottom: '0' }}>
-                      <label style={{ fontSize: '0.85rem' }}>Available Flavours (Comma-separated)</label>
+                      <label style={{ fontSize: '0.85rem' }}>Available Flavours to Choose From (Comma-separated)</label>
                       <textarea 
                         rows="2"
                         value={assortedFlavoursInput} 
                         onChange={e => setAssortedFlavoursInput(e.target.value)}
-                        placeholder="Signature Choc Chip, Double Chocolate Fudge, Red Velvet..."
+                        placeholder="Signature Classic Fudge, Toasted Walnut Brownie, Salted Caramel Swirl Brownie"
                       />
                     </div>
                   </div>

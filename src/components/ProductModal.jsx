@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ShoppingBag, Plus, Minus, Check, Sparkles } from 'lucide-react';
+import { X, ShoppingBag, Plus, Minus, Check, Sparkles, Wheat } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './ProductModal.css';
 
-const DEFAULT_ASSORTED_FLAVOURS = [
+const DEFAULT_COOKIE_FLAVOURS = [
   'Signature Chocolate Chip',
   'Double Chocolate Fudge',
   'Red Velvet White Choc',
@@ -13,20 +13,49 @@ const DEFAULT_ASSORTED_FLAVOURS = [
   'Salted Caramel Crisp'
 ];
 
-const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
+const DEFAULT_BROWNIE_FLAVOURS = [
+  'Nutella',
+  'Chocolate Ganache',
+  'Biscoff'
+];
+
+const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions = [] }) => {
   const [quantity, setQuantity] = useState(1);
-  const isAssorted = product.is_custom_assorted || product.isCustomAssorted;
-  const capacity = product.assorted_capacity || product.assortedCapacity || 3;
-  
-  // Parse flavours for assorted tin from cookie tin options
-  const availableFlavours = (
-    (cookieTinOptions && cookieTinOptions.length > 0 ? cookieTinOptions : null) ||
-    product.assorted_flavours || 
-    product.assortedFlavours || 
-    DEFAULT_ASSORTED_FLAVOURS
+  const isBrownie = Boolean(
+    (product.category && product.category.toLowerCase().includes('brownie')) ||
+    (product.name && product.name.toLowerCase().includes('brownie'))
   );
 
-  // Assorted Tin flavour breakdown state: { [flavour]: count }
+  const isPackOf4 = Boolean(
+    product.name && (product.name.toLowerCase().includes('pack of 4') || product.name.toLowerCase().includes('box of 4'))
+  );
+
+  const isAssorted = product.is_custom_assorted || product.isCustomAssorted || isPackOf4;
+  const capacity = product.assorted_capacity || product.assortedCapacity || (isPackOf4 ? 4 : (isBrownie ? 3 : 3));
+
+  // Flour choice for all brownies (Classic Maida vs Healthy Ragi)
+  const hasFlourChoice = isBrownie || product.has_flour_choice || product.hasFlourChoice;
+  const flourOptions = product.flourOptions || ['Classic Maida', 'Healthy Ragi'];
+  const [selectedFlour, setSelectedFlour] = useState('Classic Maida');
+
+  // Piece count display
+  const pieceCount = product.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : (product.pieces ? `${product.pieces} Pieces` : null)));
+  
+  // Available flavours: NEVER show cookies on brownies!
+  const isCookieDefault = (arr) => Array.isArray(arr) && arr.includes('Signature Chocolate Chip');
+
+  let availableFlavours = [];
+  if (Array.isArray(product.assorted_flavours) && product.assorted_flavours.length > 0 && !(isBrownie && isCookieDefault(product.assorted_flavours))) {
+    availableFlavours = product.assorted_flavours;
+  } else if (Array.isArray(product.assortedFlavours) && product.assortedFlavours.length > 0 && !(isBrownie && isCookieDefault(product.assortedFlavours))) {
+    availableFlavours = product.assortedFlavours;
+  } else if (isBrownie) {
+    availableFlavours = brownieOptions && brownieOptions.length > 0 ? brownieOptions : DEFAULT_BROWNIE_FLAVOURS;
+  } else {
+    availableFlavours = cookieTinOptions && cookieTinOptions.length > 0 ? cookieTinOptions : DEFAULT_COOKIE_FLAVOURS;
+  }
+
+  // Assorted flavour breakdown state: { [flavour]: count }
   const [flavourCounts, setFlavourCounts] = useState(() => {
     if (!isAssorted) return {};
     const initial = {};
@@ -41,12 +70,12 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
 
   const { addToCart } = useCart();
 
-  // Calculate total selected flavours for assorted tin
+  // Calculate total selected flavours for assorted box/tin
   const totalFlavoursSelected = isAssorted 
     ? Object.values(flavourCounts).reduce((sum, count) => sum + count, 0)
     : 0;
 
-  // Build flat array of selected flavour slots (e.g. ['Signature Chocolate Chip', 'Double Chocolate Fudge'])
+  // Build flat array of selected flavour slots
   const selectedSlots = [];
   if (isAssorted) {
     Object.entries(flavourCounts).forEach(([name, count]) => {
@@ -68,12 +97,21 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
     }));
   };
 
-  // Quick preset: Baker's Top 3 Mix
+  // Quick preset: Baker's Top Mix
   const applyBakersMix = () => {
     const next = {};
-    availableFlavours.forEach((f, idx) => {
-      next[f] = idx < capacity ? 1 : 0;
-    });
+    availableFlavours.forEach(f => { next[f] = 0; });
+
+    if (isBrownie && capacity === 4 && availableFlavours.length >= 3) {
+      // 2 Classic Fudge + 1 Walnut + 1 Salted Caramel
+      next[availableFlavours[0]] = 2;
+      next[availableFlavours[1]] = 1;
+      next[availableFlavours[2]] = 1;
+    } else {
+      availableFlavours.forEach((f, idx) => {
+        next[f] = idx < capacity ? 1 : 0;
+      });
+    }
     setFlavourCounts(next);
   };
 
@@ -85,19 +123,27 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
   };
 
   const handleOrder = () => {
-    let finalOptions = '';
+    if (isAssorted && totalFlavoursSelected !== capacity) return;
+
+    const parts = [];
+    if (hasFlourChoice && selectedFlour) {
+      parts.push(`Base: ${selectedFlour}`);
+    }
 
     if (isAssorted) {
-      if (totalFlavoursSelected !== capacity) return;
-      
       const chosenList = Object.entries(flavourCounts)
         .filter(([_, count]) => count > 0)
         .map(([name, count]) => count > 1 ? `${count}x ${name}` : name);
-      
-      finalOptions = `Custom Assorted (${capacity} Flavours): ${chosenList.join(', ')}`;
-    } else {
-      finalOptions = selectedCustomisation || '';
+      parts.push(`Custom Assorted (${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}): ${chosenList.join(', ')}`);
+    } else if (selectedCustomisation) {
+      parts.push(selectedCustomisation);
     }
+
+    if (pieceCount && !isAssorted) {
+      parts.push(pieceCount);
+    }
+
+    const finalOptions = parts.join(' • ');
 
     addToCart(product, quantity, finalOptions);
     onClose();
@@ -136,23 +182,69 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
           <div className="modal-details">
             <div className="modal-header-section">
               <h2>{product.name}</h2>
-              <p className="modal-price">₹{product.price}</p>
+              <div className="modal-meta-row">
+                <span className="modal-price">₹{product.price}</span>
+                {pieceCount && (
+                  <span className="modal-piece-pill">
+                    {isBrownie ? '🍫' : '📦'} {pieceCount}
+                  </span>
+                )}
+              </div>
             </div>
 
             <p className="modal-desc">{product.longDescription || product.description}</p>
             
-            {/* Custom Assorted Tin Builder */}
+            {/* Flour Base Selection (Maida vs Ragi) for Brownies */}
+            {hasFlourChoice && (
+              <div className="modal-flour-section">
+                <label className="modal-section-label">
+                  <Wheat size={16} color="var(--color-caramel)" /> Choose Your Flour Base:
+                </label>
+                <div className="modal-flour-cards">
+                  <button
+                    type="button"
+                    className={`modal-flour-card ${selectedFlour === 'Classic Maida' ? 'selected' : ''}`}
+                    onClick={() => setSelectedFlour('Classic Maida')}
+                  >
+                    <div className="flour-card-header">
+                      <span className="flour-emoji">🌾</span>
+                      <strong className="flour-name">Classic Maida</strong>
+                      {selectedFlour === 'Classic Maida' && <span className="flour-check">✓</span>}
+                    </div>
+                    <span className="flour-subtext">Ultra-Fudgy & Melty Traditional Texture</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`modal-flour-card ${selectedFlour === 'Healthy Ragi' ? 'selected' : ''}`}
+                    onClick={() => setSelectedFlour('Healthy Ragi')}
+                  >
+                    <div className="flour-card-header">
+                      <span className="flour-emoji">🌱</span>
+                      <strong className="flour-name">Healthy Ragi</strong>
+                      {selectedFlour === 'Healthy Ragi' && <span className="flour-check">✓</span>}
+                    </div>
+                    <span className="flour-subtext">Nutritious Finger Millet • Guilt-Free & Wholesome</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Custom Assorted Builder (For Brownie Box of 4 or Cookie Tins) */}
             {isAssorted ? (
               <div className="assorted-tin-builder">
                 <div className="assorted-builder-header">
                   <div>
                     <label className="modal-section-label" style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Sparkles size={16} color="var(--color-caramel)" /> Choose Any {capacity} Cookie Flavours
+                      <Sparkles size={16} color="var(--color-caramel)" />
+                      {isBrownie 
+                        ? `Choose Any ${capacity} Brownie Pieces (Pick from 3 Flavours)`
+                        : `Choose Any ${capacity} Cookie Flavours`}
                     </label>
                     <span className="assorted-progress-text">
                       {totalFlavoursSelected === capacity 
-                        ? '✨ All 3 flavours chosen! Ready to order.' 
-                        : `${totalFlavoursSelected} of ${capacity} flavours chosen`}
+                        ? `✨ All ${capacity} pieces chosen! Ready to order.` 
+                        : `${totalFlavoursSelected} of ${capacity} pieces chosen`}
                     </span>
                   </div>
                   <div className="assorted-header-actions">
@@ -162,13 +254,16 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
                       </button>
                     )}
                     <button type="button" onClick={applyBakersMix} className="btn-preset">
-                      Top 3 Mix
+                      Top {capacity} Mix
                     </button>
                   </div>
                 </div>
 
-                {/* 3 Visual Flavour Slots */}
-                <div className="assorted-slots-bar three-slots">
+                {/* Visual Flavour Slots */}
+                <div 
+                  className="assorted-slots-bar"
+                  style={{ gridTemplateColumns: `repeat(${capacity}, 1fr)` }}
+                >
                   {Array.from({ length: capacity }).map((_, i) => {
                     const flavour = selectedSlots[i];
                     return flavour ? (
@@ -178,20 +273,22 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
                         onClick={() => handleFlavourChange(flavour, -1)}
                         title={`Click to remove ${flavour}`}
                       >
-                        <span className="slot-badge">Flavour {i + 1}</span>
-                        <span className="slot-name">🍪 {flavour}</span>
+                        <span className="slot-badge">{isBrownie ? `Piece ${i + 1}` : `Flavour ${i + 1}`}</span>
+                        <span className="slot-name">
+                          {isBrownie ? '🍫' : '🍪'} {flavour.replace(/ Cookie Tin| Cookies| Tin| Brownie/gi, '').trim()}
+                        </span>
                         <span className="slot-remove">✕</span>
                       </div>
                     ) : (
                       <div key={i} className="assorted-slot empty">
-                        <span className="slot-badge">Flavour {i + 1}</span>
+                        <span className="slot-badge">{isBrownie ? `Piece ${i + 1}` : `Flavour ${i + 1}`}</span>
                         <span className="slot-empty-text">+ Pick Below</span>
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Cookie Tin Flavour Rows */}
+                {/* Flavour Rows with +/- Counters */}
                 <div className="assorted-flavours-list">
                   {availableFlavours.map(flavour => {
                     const count = flavourCounts[flavour] || 0;
@@ -200,13 +297,13 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
                         key={flavour} 
                         className={`flavour-row ${count > 0 ? 'selected-row' : ''}`}
                         onClick={() => {
-                          if (count === 0 && totalFlavoursSelected < capacity) {
+                          if (totalFlavoursSelected < capacity) {
                             handleFlavourChange(flavour, 1);
                           }
                         }}
                       >
                         <div className="flavour-info">
-                          <span className="flavour-icon">🍪</span>
+                          <span className="flavour-icon">{isBrownie ? '🍫' : '🍪'}</span>
                           <span className="flavour-name">{flavour}</span>
                         </div>
                         <div className="flavour-counter" onClick={e => e.stopPropagation()}>
@@ -274,8 +371,10 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [] }) => {
             >
               <ShoppingBag size={20} />
               {isAssorted && totalFlavoursSelected < capacity
-                ? `Choose ${capacity - totalFlavoursSelected} more flavour${capacity - totalFlavoursSelected > 1 ? 's' : ''}`
-                : (isAssorted ? `Add 3-Flavour Assorted Tin • ₹${product.price * quantity}` : `Add to Cart • ₹${product.price * quantity}`)}
+                ? `Choose ${capacity - totalFlavoursSelected} more piece${capacity - totalFlavoursSelected > 1 ? 's' : ''}`
+                : (isAssorted 
+                    ? `Add ${capacity}-${isBrownie ? 'Piece Brownie Box' : 'Flavour Assorted Tin'} • ₹${product.price * quantity}` 
+                    : `Add to Cart • ₹${product.price * quantity}`)}
             </button>
           </div>
         </div>

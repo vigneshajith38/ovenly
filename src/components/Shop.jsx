@@ -41,14 +41,27 @@ const Shop = ({ featuredOnly = false }) => {
         if (error) throw error;
         
         // Map database fields to what ProductCard expects
-        const formattedData = (data || []).map(p => ({
-          ...p,
-          image: p.image_path || p.image,
-          available: p.is_available,
-          isCustomAssorted: p.is_custom_assorted,
-          assortedCapacity: p.assorted_capacity || 3,
-          assortedFlavours: p.assorted_flavours
-        }));
+        const formattedData = (data || []).map(p => {
+          const isBrownie = (
+            (p.category && p.category.toLowerCase().includes('brownie')) ||
+            (p.name && p.name.toLowerCase().includes('brownie'))
+          );
+          const isPackOf4 = p.name && (p.name.toLowerCase().includes('pack of 4') || p.name.toLowerCase().includes('box of 4'));
+          
+          return {
+            ...p,
+            image: p.image_path || p.image,
+            available: p.is_available,
+            isBrownie,
+            isCustomAssorted: p.is_custom_assorted || isPackOf4,
+            assortedCapacity: p.assorted_capacity || (isPackOf4 ? 4 : (isBrownie ? 3 : 3)),
+            assortedFlavours: p.assorted_flavours,
+            pieceCount: p.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : undefined))),
+            pieces: p.pieces || (isPackOf4 ? 4 : (p.name?.includes('500g') ? 9 : undefined)),
+            hasFlourChoice: isBrownie || p.has_flour_choice,
+            flourOptions: ['Classic Maida', 'Healthy Ragi']
+          };
+        });
         
         setDbProducts(formattedData);
       } catch (err) {
@@ -65,25 +78,39 @@ const Shop = ({ featuredOnly = false }) => {
   const displayProducts = featuredOnly 
     ? dbProducts.slice(0, 3) 
     : dbProducts.filter(p => {
+        const isBrownie = (
+          (p.category && p.category.toLowerCase().includes('brownie')) ||
+          (p.name && p.name.toLowerCase().includes('brownie'))
+        );
         if (activeCategory === 'cookie-tins') {
-          return p.category === 'cookie-tins' || p.category === 'cookies' || p.is_custom_assorted || p.isCustomAssorted;
+          return ((p.category === 'cookie-tins' || p.category === 'cookies' || p.isCustomAssorted || p.is_custom_assorted) && !isBrownie);
         }
         if (activeCategory === 'cupcakes') {
           return p.category === 'cupcakes' || p.category === 'cupcake';
         }
         if (activeCategory === 'brownies') {
-          return p.category === 'brownies' || p.category === 'brownie';
+          return isBrownie;
         }
         return activeCategory === 'all' || p.category === activeCategory;
       });
 
   // Extract all available cookie tin flavour names from cookie tins
   const cookieTinOptions = dbProducts
-    .filter(p => (p.category === 'cookie-tins') && !p.is_custom_assorted && !p.isCustomAssorted)
+    .filter(p => (p.category === 'cookie-tins') && !p.is_custom_assorted && !p.isCustomAssorted && !p.name?.toLowerCase().includes('brownie'))
     .map(p => {
       const clean = p.name.replace(/ Cookie Tin| Cookies| Tin/gi, '').trim();
       return clean.charAt(0).toUpperCase() + clean.slice(1);
     });
+
+  // Extract brownie flavours from any brownie in database that has custom flavours, or fallback to default
+  const customBrownieFlavours = dbProducts
+    .filter(p => (p.category?.toLowerCase().includes('brownie') || p.name?.toLowerCase().includes('brownie')) && Array.isArray(p.assorted_flavours) && !p.assorted_flavours.includes('Signature Chocolate Chip'))
+    .map(p => p.assorted_flavours)
+    .flat();
+
+  const brownieOptions = customBrownieFlavours.length > 0
+    ? [...new Set(customBrownieFlavours)]
+    : ['Nutella', 'Chocolate Ganache', 'Biscoff'];
 
   return (
     <div className={`shop-container ${featuredOnly ? '' : 'full-page-shop container animate-fade-in'}`}>
@@ -134,6 +161,7 @@ const Shop = ({ featuredOnly = false }) => {
               key={product.id} 
               product={product} 
               cookieTinOptions={cookieTinOptions} 
+              brownieOptions={brownieOptions}
             />
           ))}
         </div>

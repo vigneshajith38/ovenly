@@ -184,6 +184,107 @@
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
+.piece-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--color-dark-chocolate);
+  color: var(--color-warm-vanilla);
+  font-size: 0.74rem;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.2px;
+}
+
+.card-piece-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.card-piece-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(184, 115, 51, 0.12);
+  color: var(--color-caramel);
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(184, 115, 51, 0.25);
+}
+
+.card-flour-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(6, 75, 53, 0.08);
+  color: var(--color-forest);
+  padding: 2px 7px;
+  border-radius: 12px;
+  border: 1px solid rgba(6, 75, 53, 0.15);
+}
+
+/* Mini Flour Selector inside Card Popover */
+.mini-flour-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: #fdfaf5;
+  border: 1.5px solid #ecd8c2;
+  padding: 5px 8px;
+  border-radius: 8px;
+  margin-bottom: 7px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.mini-flour-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-forest);
+  white-space: nowrap;
+}
+
+.mini-flour-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.mini-flour-btn {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(6, 75, 53, 0.25);
+  background: white;
+  color: var(--color-dark-chocolate);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.mini-flour-btn:hover {
+  border-color: var(--color-caramel);
+  background: #fffdfa;
+}
+
+.mini-flour-btn.active {
+  background: var(--color-forest);
+  color: white;
+  border-color: var(--color-forest);
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(6, 75, 53, 0.2);
+}
+
 /* Card Popped-Open State - Keeps exact card size and full-size polaroid picture */
 .product-card.popover-active {
   z-index: 30;

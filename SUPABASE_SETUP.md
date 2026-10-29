@@ -30,6 +30,8 @@ To set up your database tables (Products and Reviews) along with the security po
 3. Open `supabase/migrations/001_initial_schema.sql` from your project code, paste its contents into the SQL Editor, and click **Run**.
 4. Open `supabase/migrations/002_rls_policies.sql`, paste it, and click **Run**.
 5. Open `supabase/migrations/003_storage_setup.sql`, paste it, and click **Run**.
+6. Open `supabase/migrations/004_egg_options_and_assorted.sql`, paste it, and click **Run**.
+7. Open `supabase/migrations/005_brownie_options_and_pieces.sql`, paste it, and click **Run**.
 
 ## 4. Administrator Setup
 
