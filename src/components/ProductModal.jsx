@@ -53,17 +53,17 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
     )
   );
 
-  // ONLY treat as assorted if admin explicitly enabled it OR it's an assorted tin/pack-of-4
-  const isAssorted = Boolean(
-    product.is_custom_assorted || 
-    product.isCustomAssorted || 
-    (product.name && (product.name.toLowerCase().includes('assorted') || isPackOf4))
-  );
+  // ONLY treat as assorted if admin explicitly enabled it (true) or if null and explicitly named assorted
+  const isAssorted = product.is_custom_assorted !== undefined && product.is_custom_assorted !== null
+    ? Boolean(product.is_custom_assorted)
+    : (product.isCustomAssorted !== undefined ? Boolean(product.isCustomAssorted) : Boolean(product.name && product.name.toLowerCase().includes('assorted')));
 
   const capacity = product.assorted_capacity || product.assortedCapacity || (isPackOf4 ? 4 : (isPackOf1 ? 1 : 3));
 
-  // Flour choice for all brownies (Classic Maida vs Healthy Ragi) OR if explicitly set by admin
-  const hasFlourChoice = Boolean(isBrownie || product.has_flour_choice || product.hasFlourChoice);
+  // Flour choice for brownies OR if explicitly set by admin
+  const hasFlourChoice = product.has_flour_choice !== undefined && product.has_flour_choice !== null
+    ? Boolean(product.has_flour_choice)
+    : (product.hasFlourChoice !== undefined ? Boolean(product.hasFlourChoice) : Boolean(isBrownie));
   const flourOptions = product.flourOptions || ['Classic Maida', 'Healthy Ragi'];
   const [selectedFlour, setSelectedFlour] = useState('Classic Maida');
 

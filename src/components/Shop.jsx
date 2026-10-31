@@ -42,9 +42,19 @@ const Shop = ({ featuredOnly = false }) => {
         
         // Map database fields to what ProductCard expects
         const formattedData = (data || []).map(p => {
+          let meta = {};
+          if (p.description) {
+            const metaMatch = p.description.match(/<!--META:([\s\S]*?)-->/);
+            if (metaMatch) {
+              try { meta = JSON.parse(metaMatch[1]); } catch (e) {}
+            }
+          }
+
           let quantityVariants = [];
           if (Array.isArray(p.quantity_variants) && p.quantity_variants.length > 0) {
             quantityVariants = p.quantity_variants;
+          } else if (Array.isArray(meta.variants) && meta.variants.length > 0) {
+            quantityVariants = meta.variants;
           } else if (p.description) {
             const match = p.description.match(/<!--VARIANTS:([\s\S]*?)-->/);
             if (match) {
@@ -56,7 +66,10 @@ const Shop = ({ featuredOnly = false }) => {
             }
           }
           
-          const cleanDescription = (p.description || '').replace(/<!--VARIANTS:[\s\S]*?-->/g, '').trim();
+          const cleanDescription = (p.description || '')
+            .replace(/<!--META:[\s\S]*?-->/g, '')
+            .replace(/<!--VARIANTS:[\s\S]*?-->/g, '')
+            .trim();
 
           const isHealthy = Boolean(
             p.category === 'healthy-bakes' ||
@@ -85,12 +98,11 @@ const Shop = ({ featuredOnly = false }) => {
             )
           );
 
-          // Custom assortment ONLY if explicitly set in admin (p.is_custom_assorted) OR named assorted tin/box
-          const isCustomAssorted = Boolean(
-            p.is_custom_assorted || 
-            p.isCustomAssorted || 
-            (p.name && (p.name.toLowerCase().includes('assorted') || isPackOf4))
-          );
+          // Custom assortment ONLY if admin set is_custom_assorted to true!
+          // If admin unchecked it (false), it is NEVER custom assorted.
+          const isCustomAssorted = p.is_custom_assorted !== undefined && p.is_custom_assorted !== null
+            ? Boolean(p.is_custom_assorted)
+            : Boolean(p.name && p.name.toLowerCase().includes('assorted'));
 
           let capacity = p.assorted_capacity || p.assortedCapacity;
           if (!capacity) {
@@ -99,6 +111,10 @@ const Shop = ({ featuredOnly = false }) => {
             else if (isBrownie && isCustomAssorted) capacity = 1;
             else capacity = 3;
           }
+
+          const hasFlourChoice = p.has_flour_choice !== undefined && p.has_flour_choice !== null
+            ? Boolean(p.has_flour_choice)
+            : (meta.hasFlourChoice !== undefined ? Boolean(meta.hasFlourChoice) : Boolean(isBrownie));
           
           return {
             ...p,
@@ -113,9 +129,9 @@ const Shop = ({ featuredOnly = false }) => {
             isCustomAssorted,
             assortedCapacity: isCustomAssorted ? capacity : undefined,
             assortedFlavours: p.assorted_flavours,
-            pieceCount: p.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 && isCustomAssorted ? '1 Piece (Pack of 1)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : (isBrownie && isCustomAssorted ? (capacity === 1 ? '1 Piece' : `${capacity} Pieces`) : undefined))))),
+            pieceCount: p.piece_count || meta.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 && isCustomAssorted ? '1 Piece (Pack of 1)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : (isBrownie && isCustomAssorted ? (capacity === 1 ? '1 Piece' : `${capacity} Pieces`) : undefined))))),
             pieces: p.pieces || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (p.name?.includes('500g') ? 9 : undefined))),
-            hasFlourChoice: Boolean(isBrownie || p.has_flour_choice),
+            hasFlourChoice,
             flourOptions: ['Classic Maida', 'Healthy Ragi']
           };
         });

@@ -69,10 +69,21 @@ const AdminProducts = () => {
         )
       );
 
-      // Parse quantity variants from column or embedded description tag
+      // Parse metadata from description (pieces, flourChoice, variants)
+      let meta = {};
+      if (product.description) {
+        const metaMatch = product.description.match(/<!--META:([\s\S]*?)-->/);
+        if (metaMatch) {
+          try { meta = JSON.parse(metaMatch[1]); } catch (e) {}
+        }
+      }
+
+      // Parse quantity variants from column, meta tag, or variants tag
       let variants = [];
       if (Array.isArray(product.quantity_variants) && product.quantity_variants.length > 0) {
         variants = product.quantity_variants;
+      } else if (Array.isArray(meta.variants) && meta.variants.length > 0) {
+        variants = meta.variants;
       } else if (product.description) {
         const match = product.description.match(/<!--VARIANTS:([\s\S]*?)-->/);
         if (match) {
@@ -86,7 +97,10 @@ const AdminProducts = () => {
       setQuantityVariants(variants);
 
       // Clean description of any embedded metadata comments
-      const cleanDesc = (product.description || '').replace(/<!--VARIANTS:[\s\S]*?-->/g, '').trim();
+      const cleanDesc = (product.description || '')
+        .replace(/<!--META:[\s\S]*?-->/g, '')
+        .replace(/<!--VARIANTS:[\s\S]*?-->/g, '')
+        .trim();
 
       setCurrentProduct(product);
       setName(product.name);
@@ -94,8 +108,8 @@ const AdminProducts = () => {
       setPrice(product.price);
       setCategory(product.category || (isBrownieProd ? 'brownies' : 'cookie-tins'));
       setDietaryType(product.dietary_type || 'eggless');
-      setPieceCount(product.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : ''))));
-      setHasFlourChoice(Boolean(isBrownieProd || product.has_flour_choice));
+      setPieceCount(product.piece_count || meta.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : ''))));
+      setHasFlourChoice(meta.hasFlourChoice !== undefined ? Boolean(meta.hasFlourChoice) : Boolean(isBrownieProd || product.has_flour_choice));
       setIsCustomAssorted(Boolean(product.is_custom_assorted));
       setAssortedCapacity(product.assorted_capacity || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (isBrownieProd ? 1 : 3))));
       
@@ -181,15 +195,26 @@ const AdminProducts = () => {
         .filter(v => v.label && v.label.trim() && v.price !== '')
         .map(v => ({ label: v.label.trim(), price: parseFloat(v.price) }));
 
-      const cleanDesc = (description || '').replace(/<!--VARIANTS:[\s\S]*?-->/g, '').trim();
-      const finalDescription = validVariants.length > 0 
-        ? `${cleanDesc}\n\n<!--VARIANTS:${JSON.stringify(validVariants)}-->`
+      const cleanDesc = (description || '')
+        .replace(/<!--META:[\s\S]*?-->/g, '')
+        .replace(/<!--VARIANTS:[\s\S]*?-->/g, '')
+        .trim();
+
+      const metaObj = {
+        variants: validVariants,
+        pieceCount: pieceCount || '',
+        hasFlourChoice: Boolean(hasFlourChoice)
+      };
+
+      const finalDescription = (validVariants.length > 0 || pieceCount || hasFlourChoice)
+        ? `${cleanDesc}\n\n<!--META:${JSON.stringify(metaObj)}-->\n<!--VARIANTS:${JSON.stringify(validVariants)}-->`
         : cleanDesc;
 
       const basePrice = price && !isNaN(parseFloat(price)) 
         ? parseFloat(price) 
         : (validVariants.length > 0 ? validVariants[0].price : 0);
 
+      // ONLY send columns that actually exist in Supabase products table
       const productData = {
         name,
         description: finalDescription,
@@ -197,25 +222,11 @@ const AdminProducts = () => {
         category,
         is_published: isPublished,
         is_available: isAvailable,
-        image_path
+        image_path,
+        is_custom_assorted: Boolean(isCustomAssorted),
+        assorted_capacity: isCustomAssorted ? (parseInt(assortedCapacity, 10) || 1) : null,
+        assorted_flavours: isCustomAssorted ? flavoursArray : []
       };
-
-      if (pieceCount) {
-        productData.piece_count = pieceCount;
-      }
-      productData.has_flour_choice = Boolean(hasFlourChoice);
-
-      if (validVariants.length > 0) {
-        productData.quantity_variants = validVariants;
-      }
-
-      if (isCustomAssorted) {
-        productData.is_custom_assorted = true;
-        productData.assorted_capacity = parseInt(assortedCapacity, 10) || 1;
-        productData.assorted_flavours = flavoursArray;
-      } else {
-        productData.is_custom_assorted = false;
-      }
 
       let saveError = null;
 
@@ -232,54 +243,17 @@ const AdminProducts = () => {
         saveError = res.error;
       }
 
-      // If quantity_variants column is missing, remove it and re-save (metadata is safely stored in description tag!)
-      if (saveError && (saveError.message?.includes('quantity_variants') || saveError.message?.includes('schema cache'))) {
-        console.warn('quantity_variants column not in schema, saving via description metadata:', saveError.message);
-        delete productData.quantity_variants;
-        if (currentProduct) {
-          const res = await supabase.from('products').update(productData).eq('id', currentProduct.id);
-          saveError = res.error;
-        } else {
-          const res = await supabase.from('products').insert([productData]);
-          saveError = res.error;
-        }
-      }
+      // If assorted columns ever fail, fallback smoothly without popup
+      if (saveError && (saveError.message?.includes('assorted') || saveError.message?.includes('column'))) {
+        console.warn('Retrying save without assorted columns:', saveError.message);
+        delete productData.is_custom_assorted;
+        delete productData.assorted_capacity;
+        delete productData.assorted_flavours;
 
-      // If Supabase table is missing the custom assorted columns
-      if (saveError && (saveError.message?.includes('assorted') || saveError.message?.includes('column') || saveError.message?.includes('schema cache'))) {
-        console.warn('Supabase missing assorted columns:', saveError.message);
-        setShowSqlHelper(true);
-
-        const saveBasic = window.confirm(
-          "⚠️ Your Supabase database is missing the 'assorted_capacity' column.\n\n" +
-          "Click OK to save your product photo, name & price right now!\n\n" +
-          "Then run the 1-click SQL in your Supabase SQL Editor (shown at top) to enable the custom tin feature."
-        );
-
-        if (saveBasic) {
-          const basicData = {
-            name,
-            description: finalDescription,
-            price: basePrice,
-            category,
-            is_published: isPublished,
-            is_available: isAvailable,
-            image_path
-          };
-
-          const basicRes = currentProduct 
-            ? await supabase.from('products').update(basicData).eq('id', currentProduct.id)
-            : await supabase.from('products').insert([basicData]);
-
-          if (basicRes.error) throw basicRes.error;
-
-          alert("Product saved successfully! To turn on the custom assorted tin feature, run the quick SQL shown at the top of the Admin page in Supabase.");
-          await fetchProducts();
-          closeModal();
-          return;
-        } else {
-          return;
-        }
+        const retryRes = currentProduct 
+          ? await supabase.from('products').update(productData).eq('id', currentProduct.id)
+          : await supabase.from('products').insert([productData]);
+        saveError = retryRes.error;
       }
 
       if (saveError) throw saveError;
