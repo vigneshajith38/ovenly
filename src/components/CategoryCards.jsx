@@ -7,6 +7,7 @@ const CategoryCards = () => {
     { name: 'Cookies', id: 'cookie-tins', bg: 'var(--color-blush-pink)', rotate: '-2deg', icon: '🍪' },
     { name: 'Cupcakes', id: 'cupcakes', bg: 'var(--color-sage-green)', rotate: '1deg', icon: '🧁' },
     { name: 'Brownies', id: 'brownies', bg: 'var(--color-butter-yellow)', rotate: '-1deg', icon: '🍫' },
+    { name: 'Healthy Bakes', id: 'healthy-bakes', bg: 'var(--color-pale-peach)', rotate: '2deg', icon: '🌱' },
   ];
 
   return (

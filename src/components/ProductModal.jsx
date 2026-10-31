@@ -22,7 +22,7 @@ const DEFAULT_BROWNIE_FLAVOURS = [
 const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions = [] }) => {
   const [quantity, setQuantity] = useState(1);
   const isBrownie = Boolean(
-    (product.category && product.category.toLowerCase().includes('brownie')) ||
+    (product.category && (product.category.toLowerCase().includes('brownie') || product.category === 'healthy-bakes')) ||
     (product.name && product.name.toLowerCase().includes('brownie'))
   );
 
@@ -30,16 +30,26 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
     product.name && (product.name.toLowerCase().includes('pack of 4') || product.name.toLowerCase().includes('box of 4'))
   );
 
-  const isAssorted = product.is_custom_assorted || product.isCustomAssorted || isPackOf4;
-  const capacity = product.assorted_capacity || product.assortedCapacity || (isPackOf4 ? 4 : (isBrownie ? 3 : 3));
+  const isPackOf1 = Boolean(
+    product.name && (
+      product.name.toLowerCase().includes('pack of 1') ||
+      product.name.toLowerCase().includes('box of 1') ||
+      product.name.toLowerCase().includes('single') ||
+      product.name.toLowerCase().includes('1 piece') ||
+      product.name.toLowerCase().includes('piece of 1')
+    )
+  );
 
-  // Flour choice for all brownies (Classic Maida vs Healthy Ragi)
-  const hasFlourChoice = isBrownie || product.has_flour_choice || product.hasFlourChoice;
+  const isAssorted = product.is_custom_assorted || product.isCustomAssorted || isPackOf4 || isPackOf1 || isBrownie;
+  const capacity = product.assorted_capacity || product.assortedCapacity || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (isBrownie ? 1 : 3)));
+
+  // Flour choice for all brownies & healthy bakes (Classic Maida vs Healthy Ragi)
+  const hasFlourChoice = isBrownie || product.category === 'healthy-bakes' || product.has_flour_choice || product.hasFlourChoice;
   const flourOptions = product.flourOptions || ['Classic Maida', 'Healthy Ragi'];
   const [selectedFlour, setSelectedFlour] = useState('Classic Maida');
 
   // Piece count display
-  const pieceCount = product.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : (product.pieces ? `${product.pieces} Pieces` : null)));
+  const pieceCount = product.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : (product.pieces ? `${product.pieces} Pieces` : (isBrownie ? '1 Piece' : null)))));
   
   // Available flavours: NEVER show cookies on brownies!
   const isCookieDefault = (arr) => Array.isArray(arr) && arr.includes('Signature Chocolate Chip');
@@ -60,6 +70,12 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
     if (!isAssorted) return {};
     const initial = {};
     availableFlavours.forEach(f => { initial[f] = 0; });
+    if (capacity === 1 && availableFlavours.length > 0) {
+      const match = availableFlavours.find(f => 
+        product.name && product.name.toLowerCase().includes(f.toLowerCase())
+      );
+      initial[match || availableFlavours[0]] = 1;
+    }
     return initial;
   });
 
@@ -86,6 +102,13 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
   }
 
   const handleFlavourChange = (flavour, delta) => {
+    if (capacity === 1) {
+      // For pack of 1, selecting any flavour directly chooses that single flavour!
+      const next = {};
+      availableFlavours.forEach(f => { next[f] = f === flavour ? 1 : 0; });
+      setFlavourCounts(next);
+      return;
+    }
     const current = flavourCounts[flavour] || 0;
     const next = current + delta;
     if (next < 0) return;
@@ -131,10 +154,15 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
     }
 
     if (isAssorted) {
-      const chosenList = Object.entries(flavourCounts)
-        .filter(([_, count]) => count > 0)
-        .map(([name, count]) => count > 1 ? `${count}x ${name}` : name);
-      parts.push(`Custom Assorted (${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}): ${chosenList.join(', ')}`);
+      if (capacity === 1) {
+        const chosen = Object.entries(flavourCounts).find(([_, count]) => count > 0);
+        parts.push(`Flavour: ${chosen ? chosen[0] : availableFlavours[0]}`);
+      } else {
+        const chosenList = Object.entries(flavourCounts)
+          .filter(([_, count]) => count > 0)
+          .map(([name, count]) => count > 1 ? `${count}x ${name}` : name);
+        parts.push(`Custom Assorted (${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}): ${chosenList.join(', ')}`);
+      }
     } else if (selectedCustomisation) {
       parts.push(selectedCustomisation);
     }
@@ -237,26 +265,30 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
                   <div>
                     <label className="modal-section-label" style={{ marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Sparkles size={16} color="var(--color-caramel)" />
-                      {isBrownie 
-                        ? `Choose Any ${capacity} Brownie Pieces (Pick from 3 Flavours)`
-                        : `Choose Any ${capacity} Cookie Flavours`}
+                      {capacity === 1 
+                        ? 'Choose Your Brownie Flavour:' 
+                        : (isBrownie 
+                            ? `Choose Any ${capacity} Brownie Pieces (Pick from 3 Flavours)`
+                            : `Choose Any ${capacity} Cookie Flavours`)}
                     </label>
                     <span className="assorted-progress-text">
                       {totalFlavoursSelected === capacity 
-                        ? `✨ All ${capacity} pieces chosen! Ready to order.` 
-                        : `${totalFlavoursSelected} of ${capacity} pieces chosen`}
+                        ? (capacity === 1 ? '✨ Flavour selected! Ready to order.' : `✨ All ${capacity} pieces chosen! Ready to order.`) 
+                        : `${totalFlavoursSelected} of ${capacity} ${capacity === 1 ? 'flavour' : 'pieces'} chosen`}
                     </span>
                   </div>
-                  <div className="assorted-header-actions">
-                    {totalFlavoursSelected > 0 && (
-                      <button type="button" onClick={clearSelection} className="btn-clear-slots">
-                        Clear
+                  {capacity > 1 && (
+                    <div className="assorted-header-actions">
+                      {totalFlavoursSelected > 0 && (
+                        <button type="button" onClick={clearSelection} className="btn-clear-slots">
+                          Clear
+                        </button>
+                      )}
+                      <button type="button" onClick={applyBakersMix} className="btn-preset">
+                        Top {capacity} Mix
                       </button>
-                    )}
-                    <button type="button" onClick={applyBakersMix} className="btn-preset">
-                      Top {capacity} Mix
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Visual Flavour Slots */}
@@ -371,9 +403,11 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
             >
               <ShoppingBag size={20} />
               {isAssorted && totalFlavoursSelected < capacity
-                ? `Choose ${capacity - totalFlavoursSelected} more piece${capacity - totalFlavoursSelected > 1 ? 's' : ''}`
+                ? `Choose ${capacity - totalFlavoursSelected} more ${capacity - totalFlavoursSelected > 1 ? 'pieces' : 'piece'}`
                 : (isAssorted 
-                    ? `Add ${capacity}-${isBrownie ? 'Piece Brownie Box' : 'Flavour Assorted Tin'} • ₹${product.price * quantity}` 
+                    ? (capacity === 1 
+                        ? `Add Brownie (1 Piece) • ₹${product.price * quantity}` 
+                        : `Add ${capacity}-${isBrownie ? 'Piece Brownie Box' : 'Flavour Assorted Tin'} • ₹${product.price * quantity}`) 
                     : `Add to Cart • ₹${product.price * quantity}`)}
             </button>
           </div>

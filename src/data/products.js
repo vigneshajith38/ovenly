@@ -128,6 +128,50 @@ export const products = [
     customisationOptions: ['Extra Choc Drizzle', 'Walnut Addition']
   },
   {
+    id: '12',
+    name: 'Artisanal Fudgy Brownie (Pack of 1)',
+    price: 180,
+    category: 'brownies',
+    pieceCount: '1 Piece (Pack of 1)',
+    pieces: 1,
+    isCustomAssorted: true,
+    assortedCapacity: 1,
+    assortedFlavours: [
+      'Nutella',
+      'Chocolate Ganache',
+      'Biscoff'
+    ],
+    hasFlourChoice: true,
+    flourOptions: ['Classic Maida', 'Healthy Ragi'],
+    description: 'Single portion decadent artisanal brownie. Customize your favourite flavour & choose Classic Maida or Healthy Ragi base!',
+    longDescription: 'Our signature single-serving fudgy brownie crafted with 70% dark Belgian cocoa and pure butter. Handcrafted to perfection. Customize with your favourite topping flavour (Nutella, Chocolate Ganache, or Biscoff) and choose your preferred base: Classic Maida or wholesome Healthy Ragi.',
+    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=800',
+    available: true,
+    customisationOptions: []
+  },
+  {
+    id: '13',
+    name: 'Wholesome Ragi Brownie Bake (Pack of 1)',
+    price: 195,
+    category: 'healthy-bakes',
+    pieceCount: '1 Piece (Pack of 1)',
+    pieces: 1,
+    isCustomAssorted: true,
+    assortedCapacity: 1,
+    assortedFlavours: [
+      'Nutella',
+      'Chocolate Ganache',
+      'Biscoff'
+    ],
+    hasFlourChoice: true,
+    flourOptions: ['Healthy Ragi', 'Classic Maida'],
+    description: 'Guilt-free nutrient-dense finger millet brownie sweetened with unrefined jaggery and premium dark chocolate.',
+    longDescription: 'Wholesome indulgence at its finest! Made with 100% pure organic finger millet (ragi), raw cacao, and natural jaggery. Rich in calcium and dietary fiber without compromising on that luscious fudgy bite.',
+    image: 'https://images.unsplash.com/photo-1515037893149-de7f840978e2?auto=format&fit=crop&q=80&w=800',
+    available: true,
+    customisationOptions: []
+  },
+  {
     id: '3',
     name: 'Assorted Cupcake Box (Set of 6)',
     price: 900,

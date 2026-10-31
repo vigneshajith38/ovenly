@@ -451,6 +451,32 @@
   flex: 1;
 }
 
+.mini-single-slot-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border: 1.5px solid var(--color-forest);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-forest);
+  margin-bottom: 2px;
+}
+
+.mini-single-label {
+  font-size: 0.62rem;
+  color: #777;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.mini-single-value {
+  font-weight: 700;
+  color: var(--color-dark-chocolate);
+}
+
 .mini-slots-bar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

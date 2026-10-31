@@ -52,11 +52,20 @@ const AdminProducts = () => {
   const openModal = (product = null) => {
     if (product) {
       const isBrownieProd = Boolean(
-        (product.category && product.category.toLowerCase().includes('brownie')) || 
+        (product.category && (product.category.toLowerCase().includes('brownie') || product.category === 'healthy-bakes')) || 
         (product.name && product.name.toLowerCase().includes('brownie'))
       );
       const isPackOf4 = Boolean(
         product.name && (product.name.toLowerCase().includes('pack of 4') || product.name.toLowerCase().includes('box of 4'))
+      );
+      const isPackOf1 = Boolean(
+        product.name && (
+          product.name.toLowerCase().includes('pack of 1') ||
+          product.name.toLowerCase().includes('box of 1') ||
+          product.name.toLowerCase().includes('single') ||
+          product.name.toLowerCase().includes('1 piece') ||
+          product.name.toLowerCase().includes('piece of 1')
+        )
       );
 
       setCurrentProduct(product);
@@ -65,10 +74,10 @@ const AdminProducts = () => {
       setPrice(product.price);
       setCategory(product.category || (isBrownieProd ? 'brownies' : 'cookie-tins'));
       setDietaryType(product.dietary_type || 'eggless');
-      setPieceCount(product.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : '')));
+      setPieceCount(product.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : ''))));
       setHasFlourChoice(true);
-      setIsCustomAssorted(product.is_custom_assorted || isPackOf4 || false);
-      setAssortedCapacity(product.assorted_capacity || (isPackOf4 ? 4 : (isBrownieProd ? 3 : 3)));
+      setIsCustomAssorted(product.is_custom_assorted || isPackOf4 || isPackOf1 || false);
+      setAssortedCapacity(product.assorted_capacity || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (isBrownieProd ? 1 : 3))));
       
       const defaultFlavours = isBrownieProd
         ? 'Nutella, chocolate ganache, biscoff'
@@ -95,7 +104,7 @@ const AdminProducts = () => {
       setPieceCount('');
       setHasFlourChoice(false);
       setIsCustomAssorted(false);
-      setAssortedCapacity(3);
+      setAssortedCapacity(1);
       setAssortedFlavoursInput('Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp');
       setIsPublished(false);
       setIsAvailable(true);
@@ -159,7 +168,7 @@ const AdminProducts = () => {
 
       if (isCustomAssorted) {
         productData.is_custom_assorted = true;
-        productData.assorted_capacity = parseInt(assortedCapacity, 10) || 3;
+        productData.assorted_capacity = parseInt(assortedCapacity, 10) || 1;
         productData.assorted_flavours = flavoursArray;
       } else {
         productData.is_custom_assorted = false;
@@ -362,14 +371,14 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                   )}
                   {product.is_custom_assorted && (
                     <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-caramel)', fontWeight: 'bold', marginTop: '2px' }}>
-                      ✨ Custom Assorted ({product.assorted_capacity || 3} {product.category === 'brownies' ? 'Pieces' : 'Flavours'})
+                      ✨ Custom Assorted ({product.assorted_capacity || 1} {(product.category === 'brownies' || product.category === 'healthy-bakes') ? (product.assorted_capacity === 1 ? 'Piece' : 'Pieces') : 'Flavours'})
                     </span>
                   )}
                 </td>
                 <td>
                   {product.is_custom_assorted ? (
                     <span className="badge success" style={{ background: '#fdf4eb', color: 'var(--color-caramel)', border: '1px solid #fed7aa' }}>
-                      ✨ Custom Mix ({product.assorted_capacity || 3} {product.category === 'brownies' ? 'Pieces' : 'Flavours'})
+                      ✨ Custom Mix ({product.assorted_capacity || 1} {(product.category === 'brownies' || product.category === 'healthy-bakes') ? (product.assorted_capacity === 1 ? 'Piece' : 'Pieces') : 'Flavours'})
                     </span>
                   ) : (
                     <span style={{ color: '#888', fontSize: '0.85rem' }}>Standard</span>
@@ -441,12 +450,12 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                     onChange={e => {
                       const val = e.target.value;
                       setCategory(val);
-                      if (val === 'brownies') {
+                      if (val === 'brownies' || val === 'healthy-bakes') {
                         setHasFlourChoice(true);
-                        if (!pieceCount) setPieceCount('9 Pieces (500g Slab)');
+                        if (!pieceCount) setPieceCount(val === 'healthy-bakes' ? '1 Piece (Pack of 1)' : '9 Pieces (500g Slab)');
                         if (isCustomAssorted) {
-                          setAssortedCapacity(4);
-                          setAssortedFlavoursInput('Signature Classic Fudge, Toasted Walnut Brownie, Salted Caramel Swirl Brownie');
+                          setAssortedCapacity(val === 'healthy-bakes' ? 1 : 4);
+                          setAssortedFlavoursInput('Nutella, chocolate ganache, biscoff');
                         }
                       }
                     }} 
@@ -454,6 +463,7 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                   >
                     <option value="cookie-tins">Cookie Tins</option>
                     <option value="brownies">Brownies</option>
+                    <option value="healthy-bakes">Healthy Bakes 🌱</option>
                     <option value="cupcakes">Cupcakes</option>
                     <option value="specials">Specials</option>
                   </select>
@@ -463,7 +473,7 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                   <label>Piece Count / Pack Size</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. 9 Pieces (500g Slab), 4 Pieces, 12 Cookies" 
+                    placeholder="e.g. 1 Piece (Pack of 1), 4 Pieces, 9 Pieces (500g Slab)" 
                     value={pieceCount} 
                     onChange={e => setPieceCount(e.target.value)} 
                   />
@@ -493,9 +503,9 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                     onChange={e => {
                       const checked = e.target.checked;
                       setIsCustomAssorted(checked);
-                      if (checked && category === 'brownies') {
-                        setAssortedCapacity(4);
-                        setAssortedFlavoursInput('Signature Classic Fudge, Toasted Walnut Brownie, Salted Caramel Swirl Brownie');
+                      if (checked && (category === 'brownies' || category === 'healthy-bakes')) {
+                        setAssortedCapacity(category === 'healthy-bakes' ? 1 : 4);
+                        setAssortedFlavoursInput('Nutella, chocolate ganache, biscoff');
                       }
                     }} 
                   />
@@ -508,11 +518,11 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
                     <div className="form-group" style={{ marginBottom: '5px' }}>
                       <label style={{ fontSize: '0.85rem' }}>
-                        Capacity (Number of pieces/flavours, e.g. 4 for Brownie Box of 4, 3 for Cookie Tin)
+                        Capacity (Number of pieces/flavours, e.g. 1 for Single Piece / Pack of 1, 4 for Box of 4, 3 for Cookie Tin)
                       </label>
                       <input 
                         type="number" 
-                        min="2" 
+                        min="1" 
                         max="24"
                         value={assortedCapacity} 
                         onChange={e => setAssortedCapacity(e.target.value)} 
@@ -525,7 +535,7 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                         rows="2"
                         value={assortedFlavoursInput} 
                         onChange={e => setAssortedFlavoursInput(e.target.value)}
-                        placeholder="Signature Classic Fudge, Toasted Walnut Brownie, Salted Caramel Swirl Brownie"
+                        placeholder="Nutella, chocolate ganache, biscoff"
                       />
                     </div>
                   </div>

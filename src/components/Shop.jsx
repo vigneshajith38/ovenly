@@ -42,23 +42,59 @@ const Shop = ({ featuredOnly = false }) => {
         
         // Map database fields to what ProductCard expects
         const formattedData = (data || []).map(p => {
-          const isBrownie = (
-            (p.category && p.category.toLowerCase().includes('brownie')) ||
+          const isHealthy = Boolean(
+            p.category === 'healthy-bakes' ||
+            p.category === 'healthy' ||
+            (p.name && (p.name.toLowerCase().includes('healthy') || p.name.toLowerCase().includes('ragi'))) ||
+            (p.description && (p.description.toLowerCase().includes('healthy') || p.description.toLowerCase().includes('ragi')))
+          );
+
+          const isBrownie = Boolean(
+            (p.category && (p.category.toLowerCase().includes('brownie') || p.category === 'healthy-bakes')) ||
             (p.name && p.name.toLowerCase().includes('brownie'))
           );
-          const isPackOf4 = p.name && (p.name.toLowerCase().includes('pack of 4') || p.name.toLowerCase().includes('box of 4'));
+
+          const isPackOf4 = Boolean(
+            p.name && (p.name.toLowerCase().includes('pack of 4') || p.name.toLowerCase().includes('box of 4'))
+          );
+
+          const isPackOf1 = Boolean(
+            p.name && (
+              p.name.toLowerCase().includes('pack of 1') ||
+              p.name.toLowerCase().includes('box of 1') ||
+              p.name.toLowerCase().includes('single') ||
+              p.name.toLowerCase().includes('1 piece') ||
+              p.name.toLowerCase().includes('piece of 1')
+            )
+          );
+
+          // All brownies and healthy bakes are customizable even for pack of 1
+          const isCustomAssorted = Boolean(
+            p.is_custom_assorted || p.isCustomAssorted || isPackOf4 || isPackOf1 || isBrownie
+          );
+
+          let capacity = p.assorted_capacity || p.assortedCapacity;
+          if (!capacity) {
+            if (isPackOf4) capacity = 4;
+            else if (isPackOf1) capacity = 1;
+            else if (isBrownie) capacity = 1; // Default single brownie piece is 1
+            else capacity = 3;
+          }
           
           return {
             ...p,
             image: p.image_path || p.image,
             available: p.is_available,
             isBrownie,
-            isCustomAssorted: p.is_custom_assorted || isPackOf4,
-            assortedCapacity: p.assorted_capacity || (isPackOf4 ? 4 : (isBrownie ? 3 : 3)),
+            isHealthy,
+            isPackOf1,
+            isPackOf4,
+            isCustomAssorted,
+            assortedCapacity: capacity,
             assortedFlavours: p.assorted_flavours,
-            pieceCount: p.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : undefined))),
-            pieces: p.pieces || (isPackOf4 ? 4 : (p.name?.includes('500g') ? 9 : undefined)),
-            hasFlourChoice: isBrownie || p.has_flour_choice,
+            pieceCount: p.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : (isBrownie ? '1 Piece' : undefined))))),
+            pieces: p.pieces || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (p.name?.includes('500g') ? 9 : undefined))),
+            hasFlourChoice: isBrownie || isHealthy || p.has_flour_choice,
             flourOptions: ['Classic Maida', 'Healthy Ragi']
           };
         });
@@ -78,12 +114,23 @@ const Shop = ({ featuredOnly = false }) => {
   const displayProducts = featuredOnly 
     ? dbProducts.slice(0, 3) 
     : dbProducts.filter(p => {
-        const isBrownie = (
-          (p.category && p.category.toLowerCase().includes('brownie')) ||
+        const isBrownie = Boolean(
+          (p.category && (p.category.toLowerCase().includes('brownie') || p.category === 'healthy-bakes')) ||
           (p.name && p.name.toLowerCase().includes('brownie'))
         );
+        const isHealthy = Boolean(
+          p.category === 'healthy-bakes' ||
+          p.category === 'healthy' ||
+          p.isHealthy ||
+          (p.name && (p.name.toLowerCase().includes('healthy') || p.name.toLowerCase().includes('ragi'))) ||
+          (p.description && (p.description.toLowerCase().includes('healthy') || p.description.toLowerCase().includes('ragi')))
+        );
+
+        if (activeCategory === 'healthy-bakes') {
+          return isHealthy || p.category === 'healthy-bakes' || (isBrownie && p.hasFlourChoice);
+        }
         if (activeCategory === 'cookie-tins') {
-          return ((p.category === 'cookie-tins' || p.category === 'cookies' || p.isCustomAssorted || p.is_custom_assorted) && !isBrownie);
+          return ((p.category === 'cookie-tins' || p.category === 'cookies' || p.isCustomAssorted || p.is_custom_assorted) && !isBrownie && p.category !== 'healthy-bakes');
         }
         if (activeCategory === 'cupcakes') {
           return p.category === 'cupcakes' || p.category === 'cupcake';
@@ -104,12 +151,15 @@ const Shop = ({ featuredOnly = false }) => {
 
   // Extract brownie flavours from any brownie in database that has custom flavours, or fallback to default
   const customBrownieFlavours = dbProducts
-    .filter(p => (p.category?.toLowerCase().includes('brownie') || p.name?.toLowerCase().includes('brownie')) && Array.isArray(p.assorted_flavours) && !p.assorted_flavours.includes('Signature Chocolate Chip'))
+    .filter(p => (p.category?.toLowerCase().includes('brownie') || p.name?.toLowerCase().includes('brownie') || p.category === 'healthy-bakes') && Array.isArray(p.assorted_flavours) && !p.assorted_flavours.includes('Signature Chocolate Chip'))
     .map(p => p.assorted_flavours)
     .flat();
 
   const brownieOptions = customBrownieFlavours.length > 0
-    ? [...new Set(customBrownieFlavours)]
+    ? [...new Set(customBrownieFlavours.map(f => {
+        const s = String(f).trim();
+        return s.charAt(0).toUpperCase() + s.slice(1);
+      }))]
     : ['Nutella', 'Chocolate Ganache', 'Biscoff'];
 
   return (
@@ -145,6 +195,12 @@ const Shop = ({ featuredOnly = false }) => {
               onClick={() => setActiveCategory('brownies')}
             >
               Brownies
+            </button>
+            <button 
+              className={`filter-btn ${activeCategory === 'healthy-bakes' ? 'active' : ''}`}
+              onClick={() => setActiveCategory('healthy-bakes')}
+            >
+              Healthy Bakes 🌱
             </button>
           </div>
         </>
