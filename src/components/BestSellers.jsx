@@ -21,11 +21,30 @@ const BestSellers = () => {
         .limit(3);
         
       if (!error && data) {
-        setBestSellers(data.map(p => ({
-          ...p,
-          image: p.image_path,
-          available: p.is_available
-        })));
+        setBestSellers(data.map(p => {
+          let quantityVariants = [];
+          if (Array.isArray(p.quantity_variants) && p.quantity_variants.length > 0) {
+            quantityVariants = p.quantity_variants;
+          } else if (p.description) {
+            const match = p.description.match(/<!--VARIANTS:([\s\S]*?)-->/);
+            if (match) {
+              try {
+                quantityVariants = JSON.parse(match[1]);
+              } catch (e) {
+                console.error(e);
+              }
+            }
+          }
+          const cleanDescription = (p.description || '').replace(/<!--VARIANTS:[\s\S]*?-->/g, '').trim();
+
+          return {
+            ...p,
+            description: cleanDescription,
+            quantityVariants,
+            image: p.image_path,
+            available: p.is_available
+          };
+        }));
       }
     };
     fetchBestSellers();

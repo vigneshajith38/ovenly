@@ -23,6 +23,7 @@ const AdminProducts = () => {
   );
   const [isPublished, setIsPublished] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
+  const [quantityVariants, setQuantityVariants] = useState([]);
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const [saving, setSaving] = useState(false);
@@ -68,9 +69,28 @@ const AdminProducts = () => {
         )
       );
 
+      // Parse quantity variants from column or embedded description tag
+      let variants = [];
+      if (Array.isArray(product.quantity_variants) && product.quantity_variants.length > 0) {
+        variants = product.quantity_variants;
+      } else if (product.description) {
+        const match = product.description.match(/<!--VARIANTS:([\s\S]*?)-->/);
+        if (match) {
+          try {
+            variants = JSON.parse(match[1]);
+          } catch (e) {
+            console.error('Failed to parse variants in admin', e);
+          }
+        }
+      }
+      setQuantityVariants(variants);
+
+      // Clean description of any embedded metadata comments
+      const cleanDesc = (product.description || '').replace(/<!--VARIANTS:[\s\S]*?-->/g, '').trim();
+
       setCurrentProduct(product);
       setName(product.name);
-      setDescription(product.description || '');
+      setDescription(cleanDesc);
       setPrice(product.price);
       setCategory(product.category || (isBrownieProd ? 'brownies' : 'cookie-tins'));
       setDietaryType(product.dietary_type || 'eggless');
@@ -106,6 +126,7 @@ const AdminProducts = () => {
       setIsCustomAssorted(false);
       setAssortedCapacity(1);
       setAssortedFlavoursInput('Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp');
+      setQuantityVariants([]);
       setIsPublished(false);
       setIsAvailable(true);
       setPhotoPreview('');
@@ -156,15 +177,37 @@ const AdminProducts = () => {
         .map(s => s.trim())
         .filter(Boolean);
 
+      const validVariants = quantityVariants
+        .filter(v => v.label && v.label.trim() && v.price !== '')
+        .map(v => ({ label: v.label.trim(), price: parseFloat(v.price) }));
+
+      const cleanDesc = (description || '').replace(/<!--VARIANTS:[\s\S]*?-->/g, '').trim();
+      const finalDescription = validVariants.length > 0 
+        ? `${cleanDesc}\n\n<!--VARIANTS:${JSON.stringify(validVariants)}-->`
+        : cleanDesc;
+
+      const basePrice = price && !isNaN(parseFloat(price)) 
+        ? parseFloat(price) 
+        : (validVariants.length > 0 ? validVariants[0].price : 0);
+
       const productData = {
         name,
-        description,
-        price: parseFloat(price),
+        description: finalDescription,
+        price: basePrice,
         category,
         is_published: isPublished,
         is_available: isAvailable,
         image_path
       };
+
+      if (pieceCount) {
+        productData.piece_count = pieceCount;
+      }
+      productData.has_flour_choice = Boolean(hasFlourChoice);
+
+      if (validVariants.length > 0) {
+        productData.quantity_variants = validVariants;
+      }
 
       if (isCustomAssorted) {
         productData.is_custom_assorted = true;
@@ -189,6 +232,19 @@ const AdminProducts = () => {
         saveError = res.error;
       }
 
+      // If quantity_variants column is missing, remove it and re-save (metadata is safely stored in description tag!)
+      if (saveError && (saveError.message?.includes('quantity_variants') || saveError.message?.includes('schema cache'))) {
+        console.warn('quantity_variants column not in schema, saving via description metadata:', saveError.message);
+        delete productData.quantity_variants;
+        if (currentProduct) {
+          const res = await supabase.from('products').update(productData).eq('id', currentProduct.id);
+          saveError = res.error;
+        } else {
+          const res = await supabase.from('products').insert([productData]);
+          saveError = res.error;
+        }
+      }
+
       // If Supabase table is missing the custom assorted columns
       if (saveError && (saveError.message?.includes('assorted') || saveError.message?.includes('column') || saveError.message?.includes('schema cache'))) {
         console.warn('Supabase missing assorted columns:', saveError.message);
@@ -203,8 +259,8 @@ const AdminProducts = () => {
         if (saveBasic) {
           const basicData = {
             name,
-            description,
-            price: parseFloat(price),
+            description: finalDescription,
+            price: basePrice,
             category,
             is_published: isPublished,
             is_available: isAvailable,
@@ -305,7 +361,8 @@ ADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,
 ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb,
 ADD COLUMN IF NOT EXISTS piece_count TEXT,
 ADD COLUMN IF NOT EXISTS has_flour_choice BOOLEAN DEFAULT false,
-ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb;`}
+ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb,
+ADD COLUMN IF NOT EXISTS quantity_variants JSONB;`}
             </pre>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <button 
@@ -313,7 +370,7 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                 className="btn btn-primary" 
                 style={{ padding: '7px 16px', fontSize: '0.85rem' }}
                 onClick={() => {
-                  navigator.clipboard.writeText(`ALTER TABLE products \nADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,\nADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb,\nADD COLUMN IF NOT EXISTS piece_count TEXT,\nADD COLUMN IF NOT EXISTS has_flour_choice BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb;`);
+                  navigator.clipboard.writeText(`ALTER TABLE products \nADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,\nADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb,\nADD COLUMN IF NOT EXISTS piece_count TEXT,\nADD COLUMN IF NOT EXISTS has_flour_choice BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb,\nADD COLUMN IF NOT EXISTS quantity_variants JSONB;`);
                   setCopiedSql(true);
                   setTimeout(() => setCopiedSql(false), 2500);
                 }}
@@ -348,43 +405,71 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
             </tr>
           </thead>
           <tbody>
-            {products.map(product => (
-              <tr key={product.id}>
-                <td>
-                  {product.image_path ? (
-                    <img src={product.image_path} alt={product.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
-                  ) : (
-                    <div style={{ width: '50px', height: '50px', background: '#eee', borderRadius: '8px' }}></div>
-                  )}
-                </td>
-                <td>
-                  <strong>{product.name}</strong>
-                  {product.piece_count && (
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>
-                      📦 {product.piece_count}
-                    </span>
-                  )}
-                  {product.has_flour_choice && (
-                    <span style={{ display: 'inline-block', fontSize: '0.7rem', color: 'var(--color-forest)', background: '#edf7ee', padding: '1px 6px', borderRadius: '4px', marginTop: '3px', fontWeight: '600' }}>
-                      🌾 Maida / Ragi
-                    </span>
-                  )}
-                  {product.is_custom_assorted && (
-                    <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-caramel)', fontWeight: 'bold', marginTop: '2px' }}>
-                      ✨ Custom Assorted ({product.assorted_capacity || 1} {(product.category === 'brownies' || product.category === 'healthy-bakes') ? (product.assorted_capacity === 1 ? 'Piece' : 'Pieces') : 'Flavours'})
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {product.is_custom_assorted ? (
-                    <span className="badge success" style={{ background: '#fdf4eb', color: 'var(--color-caramel)', border: '1px solid #fed7aa' }}>
-                      ✨ Custom Mix ({product.assorted_capacity || 1} {(product.category === 'brownies' || product.category === 'healthy-bakes') ? (product.assorted_capacity === 1 ? 'Piece' : 'Pieces') : 'Flavours'})
-                    </span>
-                  ) : (
-                    <span style={{ color: '#888', fontSize: '0.85rem' }}>Standard</span>
-                  )}
-                </td>
-                <td>₹{product.price}</td>
+            {products.map(product => {
+              const productVariants = (() => {
+                if (Array.isArray(product.quantity_variants) && product.quantity_variants.length > 0) return product.quantity_variants;
+                if (product.description) {
+                  const match = product.description.match(/<!--VARIANTS:([\s\S]*?)-->/);
+                  if (match) {
+                    try { return JSON.parse(match[1]); } catch (e) {}
+                  }
+                }
+                return [];
+              })();
+
+              return (
+                <tr key={product.id}>
+                  <td>
+                    {product.image_path ? (
+                      <img src={product.image_path} alt={product.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
+                    ) : (
+                      <div style={{ width: '50px', height: '50px', background: '#eee', borderRadius: '8px' }}></div>
+                    )}
+                  </td>
+                  <td>
+                    <strong>{product.name}</strong>
+                    {product.piece_count && (
+                      <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>
+                        📦 {product.piece_count}
+                      </span>
+                    )}
+                    {product.has_flour_choice && (
+                      <span style={{ display: 'inline-block', fontSize: '0.7rem', color: 'var(--color-forest)', background: '#edf7ee', padding: '1px 6px', borderRadius: '4px', marginTop: '3px', fontWeight: '600' }}>
+                        🌾 Maida / Ragi
+                      </span>
+                    )}
+                    {product.is_custom_assorted && (
+                      <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-caramel)', fontWeight: 'bold', marginTop: '2px' }}>
+                        ✨ Custom Assorted ({product.assorted_capacity || 1} {(product.category === 'brownies' || product.category === 'healthy-bakes') ? (product.assorted_capacity === 1 ? 'Piece' : 'Pieces') : 'Flavours'})
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {product.is_custom_assorted ? (
+                      <span className="badge success" style={{ background: '#fdf4eb', color: 'var(--color-caramel)', border: '1px solid #fed7aa' }}>
+                        ✨ Custom Mix ({product.assorted_capacity || 1} {(product.category === 'brownies' || product.category === 'healthy-bakes') ? (product.assorted_capacity === 1 ? 'Piece' : 'Pieces') : 'Flavours'})
+                      </span>
+                    ) : (
+                      <span style={{ color: '#888', fontSize: '0.85rem' }}>Standard</span>
+                    )}
+                  </td>
+                  <td>
+                    <strong>₹{product.price}</strong>
+                    {productVariants.length > 0 && (
+                      <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--color-forest)', fontWeight: 'bold' }}>
+                          {productVariants.length} Quantities:
+                        </span>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+                          {productVariants.map((v, i) => (
+                            <span key={i} style={{ fontSize: '0.68rem', background: '#f1f5f9', color: '#334155', padding: '1px 5px', borderRadius: '4px', border: '1px solid #cbd5e1' }}>
+                              {v.label}: ₹{v.price}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </td>
                 <td>
                   <span className={`badge ${product.is_published ? 'success' : 'warning'}`}>
                     {product.is_published ? 'Published' : 'Draft'}
@@ -406,7 +491,8 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                   </div>
                 </td>
               </tr>
-            ))}
+            );
+          })}
             {products.length === 0 && (
               <tr>
                 <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>No products found. Create one!</td>
@@ -476,6 +562,125 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                     onChange={e => setPieceCount(e.target.value)} 
                   />
                 </div>
+              </div>
+
+              {/* Multiple Quantities / Pack Sizes & Prices */}
+              <div style={{ background: '#f8fafc', border: '1.5px dashed #cbd5e1', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontWeight: 'bold', color: 'var(--color-dark-chocolate)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>📦</span> Multiple Quantities & Prices (Optional)
+                    </label>
+                    <p style={{ margin: '3px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                      Sell this bake in different quantities (e.g. 100g, 250g, 500g or 1 pc, 4 pcs) with different prices.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    style={{ fontSize: '0.8rem', padding: '5px 12px', background: 'white', whiteSpace: 'nowrap' }}
+                    onClick={() => setQuantityVariants([...quantityVariants, { label: '', price: '' }])}
+                  >
+                    <Plus size={14} style={{ marginRight: '4px' }} /> Add Quantity
+                  </button>
+                </div>
+
+                {/* Quick Presets */}
+                {quantityVariants.length === 0 && (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', margin: '8px 0', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Quick Presets:</span>
+                    <button
+                      type="button"
+                      style={{ fontSize: '0.75rem', padding: '3px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer' }}
+                      onClick={() => setQuantityVariants([
+                        { label: '100g', price: price ? Math.round(Number(price) * 0.45) : '' },
+                        { label: '250g', price: price ? Math.round(Number(price)) : '' },
+                        { label: '500g', price: price ? Math.round(Number(price) * 1.9) : '' }
+                      ])}
+                    >
+                      + 100g / 250g / 500g
+                    </button>
+                    <button
+                      type="button"
+                      style={{ fontSize: '0.75rem', padding: '3px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer' }}
+                      onClick={() => setQuantityVariants([
+                        { label: 'Pack of 1', price: price ? Math.round(Number(price) * 0.3) : '' },
+                        { label: 'Pack of 4', price: price ? Math.round(Number(price)) : '' },
+                        { label: 'Pack of 6', price: price ? Math.round(Number(price) * 1.45) : '' }
+                      ])}
+                    >
+                      + Pack of 1 / 4 / 6
+                    </button>
+                    <button
+                      type="button"
+                      style={{ fontSize: '0.75rem', padding: '3px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer' }}
+                      onClick={() => setQuantityVariants([
+                        { label: '250g', price: '' },
+                        { label: '500g', price: '' },
+                        { label: '1kg', price: '' }
+                      ])}
+                    >
+                      + 250g / 500g / 1kg
+                    </button>
+                  </div>
+                )}
+
+                {quantityVariants.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                    {quantityVariants.map((v, idx) => (
+                      <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b', width: '22px' }}>#{idx + 1}</span>
+                        <input
+                          type="text"
+                          placeholder="Quantity (e.g. 100g, 250g, Pack of 4)"
+                          value={v.label}
+                          onChange={e => {
+                            const next = [...quantityVariants];
+                            next[idx] = { ...next[idx], label: e.target.value };
+                            setQuantityVariants(next);
+                          }}
+                          style={{ flex: 1.5, padding: '7px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                        />
+                        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                          <span style={{ padding: '0 6px', color: '#64748b', fontSize: '0.85rem' }}>₹</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="Price"
+                            value={v.price}
+                            onChange={e => {
+                              const next = [...quantityVariants];
+                              next[idx] = { ...next[idx], price: e.target.value };
+                              setQuantityVariants(next);
+                            }}
+                            style={{ width: '100%', padding: '7px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setQuantityVariants(quantityVariants.filter((_, i) => i !== idx))}
+                          style={{ background: '#fee2e2', border: 'none', color: '#ef4444', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          title="Remove quantity option"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                        💡 Customers can click any quantity to see its price and order that exact size!
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantityVariants([])}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        Clear all variants
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Flour Choice Checkbox (Maida vs Ragi) */}

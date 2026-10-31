@@ -21,6 +21,19 @@ const DEFAULT_BROWNIE_FLAVOURS = [
 
 const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions = [] }) => {
   const [quantity, setQuantity] = useState(1);
+  const hasVariants = Array.isArray(product.quantityVariants) && product.quantityVariants.length > 0;
+  const [selectedVariant, setSelectedVariant] = useState(() => hasVariants ? product.quantityVariants[0] : null);
+
+  useEffect(() => {
+    if (hasVariants) {
+      setSelectedVariant(product.quantityVariants[0]);
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [product.quantityVariants]);
+
+  const activePrice = selectedVariant ? Number(selectedVariant.price) : Number(product.price);
+
   const isBrownie = Boolean(
     (product.category && product.category.toLowerCase().includes('brownie')) ||
     (product.name && product.name.toLowerCase().includes('brownie'))
@@ -155,6 +168,10 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
     if (isAssorted && totalFlavoursSelected !== capacity) return;
 
     const parts = [];
+    if (selectedVariant) {
+      parts.push(`Size/Qty: ${selectedVariant.label}`);
+    }
+
     if (hasFlourChoice && selectedFlour) {
       parts.push(`Base: ${selectedFlour}`);
     }
@@ -173,13 +190,13 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
       parts.push(selectedCustomisation);
     }
 
-    if (pieceCount && !isAssorted) {
+    if (pieceCount && !isAssorted && !selectedVariant) {
       parts.push(pieceCount);
     }
 
     const finalOptions = parts.join(' • ');
 
-    addToCart(product, quantity, finalOptions);
+    addToCart({ ...product, price: activePrice }, quantity, finalOptions);
     onClose();
   };
 
@@ -217,8 +234,8 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
             <div className="modal-header-section">
               <h2>{product.name}</h2>
               <div className="modal-meta-row">
-                <span className="modal-price">₹{product.price}</span>
-                {pieceCount && (
+                <span className="modal-price">₹{activePrice}</span>
+                {pieceCount && !hasVariants && (
                   <span className="modal-piece-pill">
                     {isBrownie ? '🍫' : '📦'} {pieceCount}
                   </span>
@@ -228,6 +245,29 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
 
             <p className="modal-desc">{product.longDescription || product.description}</p>
             
+            {/* Quantity Variant Selector */}
+            {hasVariants && (
+              <div className="modal-variants-section">
+                <label className="modal-section-label">Choose Quantity / Pack Size:</label>
+                <div className="modal-variants-pills">
+                  {product.quantityVariants.map((v, i) => {
+                    const isSelected = selectedVariant?.label === v.label;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`modal-variant-btn ${isSelected ? 'selected' : ''}`}
+                        onClick={() => setSelectedVariant(v)}
+                      >
+                        <span className="mv-label">{v.label}</span>
+                        <span className="mv-price">₹{v.price}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Flour Base Selection (Maida vs Ragi) for Brownies */}
             {hasFlourChoice && (
               <div className="modal-flour-section">
@@ -412,9 +452,9 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
                 ? `Choose ${capacity - totalFlavoursSelected} more ${capacity - totalFlavoursSelected > 1 ? 'pieces' : 'piece'}`
                 : (isAssorted 
                     ? (capacity === 1 
-                        ? `Add Brownie (1 Piece) • ₹${product.price * quantity}` 
-                        : `Add ${capacity}-${isBrownie ? 'Piece Brownie Box' : 'Flavour Assorted Tin'} • ₹${product.price * quantity}`) 
-                    : `Add to Cart • ₹${product.price * quantity}`)}
+                        ? `Add Brownie (1 Piece) • ₹${activePrice * quantity}` 
+                        : `Add ${capacity}-${isBrownie ? 'Piece Brownie Box' : 'Flavour Assorted Tin'} • ₹${activePrice * quantity}`) 
+                    : `Add to Cart • ₹${activePrice * quantity}`)}
             </button>
           </div>
         </div>

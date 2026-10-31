@@ -42,11 +42,27 @@ const Shop = ({ featuredOnly = false }) => {
         
         // Map database fields to what ProductCard expects
         const formattedData = (data || []).map(p => {
+          let quantityVariants = [];
+          if (Array.isArray(p.quantity_variants) && p.quantity_variants.length > 0) {
+            quantityVariants = p.quantity_variants;
+          } else if (p.description) {
+            const match = p.description.match(/<!--VARIANTS:([\s\S]*?)-->/);
+            if (match) {
+              try {
+                quantityVariants = JSON.parse(match[1]);
+              } catch (e) {
+                console.error('Failed to parse quantity variants', e);
+              }
+            }
+          }
+          
+          const cleanDescription = (p.description || '').replace(/<!--VARIANTS:[\s\S]*?-->/g, '').trim();
+
           const isHealthy = Boolean(
             p.category === 'healthy-bakes' ||
             p.category === 'healthy' ||
             (p.name && (p.name.toLowerCase().includes('healthy') || p.name.toLowerCase().includes('ragi'))) ||
-            (p.description && (p.description.toLowerCase().includes('healthy') || p.description.toLowerCase().includes('ragi')))
+            (cleanDescription && (cleanDescription.toLowerCase().includes('healthy') || cleanDescription.toLowerCase().includes('ragi')))
           );
 
           // ONLY true if it's actually a brownie! Never treat all healthy-bakes as brownies!
@@ -86,6 +102,8 @@ const Shop = ({ featuredOnly = false }) => {
           
           return {
             ...p,
+            description: cleanDescription,
+            quantityVariants,
             image: p.image_path || p.image,
             available: p.is_available,
             isBrownie,

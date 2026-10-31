@@ -25,6 +25,19 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
   const cardRef = useRef(null);
   const { addToCart } = useCart();
 
+  const hasVariants = Array.isArray(product.quantityVariants) && product.quantityVariants.length > 0;
+  const [selectedVariant, setSelectedVariant] = useState(() => hasVariants ? product.quantityVariants[0] : null);
+
+  useEffect(() => {
+    if (hasVariants) {
+      setSelectedVariant(product.quantityVariants[0]);
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [product.quantityVariants]);
+
+  const activePrice = selectedVariant ? Number(selectedVariant.price) : Number(product.price);
+
   const isBrownie = Boolean(
     (product.category && product.category.toLowerCase().includes('brownie')) ||
     (product.name && product.name.toLowerCase().includes('brownie'))
@@ -172,6 +185,10 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
     if (isAssorted && selectedSlots.length !== capacity) return;
 
     const parts = [];
+    if (selectedVariant) {
+      parts.push(`Size/Qty: ${selectedVariant.label}`);
+    }
+
     if (hasFlourChoice && selectedFlour) {
       parts.push(`Base: ${selectedFlour}`);
     }
@@ -193,13 +210,13 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
       parts.push(selectedCustomisation);
     }
 
-    if (pieceCount && !isAssorted) {
+    if (pieceCount && !isAssorted && !selectedVariant) {
       parts.push(pieceCount);
     }
 
     const finalOptions = parts.join(' • ');
 
-    addToCart(product, quantity, finalOptions);
+    addToCart({ ...product, price: activePrice }, quantity, finalOptions);
     setJustAdded(true);
     setTimeout(() => {
       setJustAdded(false);
@@ -264,8 +281,33 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
           <>
             <p className="product-desc">{product.description}</p>
             
+            {/* Quantity Variant Pills (e.g. 100g, 250g, 500g) */}
+            {hasVariants && (
+              <div className="card-variants-row" onClick={e => e.stopPropagation()}>
+                <span className="card-variants-label">Size / Qty:</span>
+                <div className="card-variants-pills">
+                  {product.quantityVariants.map((v, i) => {
+                    const isSelected = selectedVariant?.label === v.label;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`card-variant-btn ${isSelected ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedVariant(v);
+                        }}
+                      >
+                        {v.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Piece count pill if applicable */}
-            {pieceCount && (
+            {pieceCount && !hasVariants && (
               <div className="card-piece-info-row">
                 <span className="card-piece-tag">
                   {isBrownie ? '🍫' : '📦'} {pieceCount}
@@ -279,7 +321,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
             )}
 
             <div className="product-footer">
-              <span className="product-price">₹{product.price}</span>
+              <span className="product-price">₹{activePrice}</span>
               <button 
                 className="btn btn-primary btn-sm" 
                 onClick={handleOpenPopover}
@@ -288,7 +330,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
                 {product.available 
                   ? (isAssorted 
                       ? (capacity === 1 ? '✨ Customize (1 Piece)' : `✨ Pick ${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}`) 
-                      : 'View Details') 
+                      : (hasVariants ? '✨ Choose & Order' : 'View Details')) 
                   : 'Sold Out'}
               </button>
             </div>
@@ -297,6 +339,29 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
           /* Popped Open Quick Builder / Customization State */
           <div className="card-pop-details animate-fade-in" onClick={e => e.stopPropagation()}>
             
+            {/* Quantity Variant Selector inside Popover */}
+            {hasVariants && (
+              <div className="popover-variants-group">
+                <span className="popover-variants-label">Select Quantity / Pack Size:</span>
+                <div className="popover-variants-pills">
+                  {product.quantityVariants.map((v, i) => {
+                    const isSelected = selectedVariant?.label === v.label;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`popover-variant-pill ${isSelected ? 'active' : ''}`}
+                        onClick={() => setSelectedVariant(v)}
+                      >
+                        <span className="pv-label">{v.label}</span>
+                        <span className="pv-price">₹{v.price}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Flour Base Selector (Maida vs Ragi) for Brownies & Healthy Bakes */}
             {hasFlourChoice && (
               <div className="mini-flour-group">
@@ -413,7 +478,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
 
             {/* Cart Details Footer */}
             <div className="card-pop-footer">
-              <span className="product-price pop-price">₹{product.price}</span>
+              <span className="product-price pop-price">₹{activePrice}</span>
 
               <div className="popover-qty-selector">
                 <button 
@@ -447,7 +512,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
                   `Pick ${capacity - selectedSlots.length} more`
                 ) : (
                   <>
-                    <ShoppingBag size={14} /> Add • ₹{product.price * quantity}
+                    <ShoppingBag size={14} /> Add • ₹{activePrice * quantity}
                   </>
                 )}
               </button>
