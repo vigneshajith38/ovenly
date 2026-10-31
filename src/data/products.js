@@ -172,6 +172,19 @@ export const products = [
     customisationOptions: []
   },
   {
+    id: '14',
+    name: 'Ragi choco stars(100g)',
+    price: 89,
+    category: 'healthy-bakes',
+    isCustomAssorted: false,
+    hasFlourChoice: false,
+    description: 'Crunchy, chocolatey ragi stars made with a wholesome twist! A delicious little treat combining the goodness of ragi with a rich chocolate flavour. 💖',
+    longDescription: 'Crunchy, chocolatey ragi stars made with a wholesome twist! A delicious little treat combining the goodness of ragi with a rich chocolate flavour. 💖',
+    image: 'https://images.unsplash.com/photo-1548365328-8c6db3220e4c?auto=format&fit=crop&q=80&w=800',
+    available: true,
+    customisationOptions: []
+  },
+  {
     id: '3',
     name: 'Assorted Cupcake Box (Set of 6)',
     price: 900,

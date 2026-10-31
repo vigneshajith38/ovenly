@@ -52,7 +52,7 @@ const AdminProducts = () => {
   const openModal = (product = null) => {
     if (product) {
       const isBrownieProd = Boolean(
-        (product.category && (product.category.toLowerCase().includes('brownie') || product.category === 'healthy-bakes')) || 
+        (product.category && product.category.toLowerCase().includes('brownie')) || 
         (product.name && product.name.toLowerCase().includes('brownie'))
       );
       const isPackOf4 = Boolean(
@@ -75,8 +75,8 @@ const AdminProducts = () => {
       setCategory(product.category || (isBrownieProd ? 'brownies' : 'cookie-tins'));
       setDietaryType(product.dietary_type || 'eggless');
       setPieceCount(product.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : ''))));
-      setHasFlourChoice(true);
-      setIsCustomAssorted(product.is_custom_assorted || isPackOf4 || isPackOf1 || false);
+      setHasFlourChoice(Boolean(isBrownieProd || product.has_flour_choice));
+      setIsCustomAssorted(Boolean(product.is_custom_assorted));
       setAssortedCapacity(product.assorted_capacity || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (isBrownieProd ? 1 : 3))));
       
       const defaultFlavours = isBrownieProd
@@ -450,13 +450,11 @@ ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy
                     onChange={e => {
                       const val = e.target.value;
                       setCategory(val);
-                      if (val === 'brownies' || val === 'healthy-bakes') {
+                      if (val === 'brownies') {
                         setHasFlourChoice(true);
-                        if (!pieceCount) setPieceCount(val === 'healthy-bakes' ? '1 Piece (Pack of 1)' : '9 Pieces (500g Slab)');
-                        if (isCustomAssorted) {
-                          setAssortedCapacity(val === 'healthy-bakes' ? 1 : 4);
-                          setAssortedFlavoursInput('Nutella, chocolate ganache, biscoff');
-                        }
+                        if (!pieceCount) setPieceCount('9 Pieces (500g Slab)');
+                      } else {
+                        setHasFlourChoice(false);
                       }
                     }} 
                     style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}

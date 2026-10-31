@@ -13,23 +13,32 @@ const CategoryCards = () => {
   return (
     <section className="category-section">
       <div className="container">
-        <div className="category-row">
-          {categories.map((cat, idx) => (
-            <Link 
-              key={idx} 
-              to={`/shop?category=${cat.id}`}
-              className="category-card" 
-              style={{ 
-                backgroundColor: cat.bg,
-                transform: `rotate(${cat.rotate})`,
-                textDecoration: 'none',
-                color: 'inherit'
-              }}
-            >
-              <div className="category-icon">{cat.icon}</div>
-              <h3 className="handwritten">{cat.name}</h3>
-            </Link>
-          ))}
+        <div className="category-row-wrapper">
+          <div className="category-row">
+            {categories.map((cat, idx) => (
+              <Link 
+                key={idx} 
+                to={`/shop?category=${cat.id}`}
+                className="category-card" 
+                style={{ 
+                  backgroundColor: cat.bg,
+                  transform: `rotate(${cat.rotate})`,
+                  textDecoration: 'none',
+                  color: 'inherit'
+                }}
+              >
+                <div className="category-icon">{cat.icon}</div>
+                <h3 className="handwritten">{cat.name}</h3>
+              </Link>
+            ))}
+          </div>
+
+          {/* Transparent Mobile Scroll Hint */}
+          <div className="category-scroll-hint">
+            <span className="scroll-hint-pill">
+              ✨ scroll to see more <span className="scroll-hint-arrow">→</span>
+            </span>
+          </div>
         </div>
       </div>
     </section>

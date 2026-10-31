@@ -22,7 +22,7 @@ const DEFAULT_BROWNIE_FLAVOURS = [
 const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions = [] }) => {
   const [quantity, setQuantity] = useState(1);
   const isBrownie = Boolean(
-    (product.category && (product.category.toLowerCase().includes('brownie') || product.category === 'healthy-bakes')) ||
+    (product.category && product.category.toLowerCase().includes('brownie')) ||
     (product.name && product.name.toLowerCase().includes('brownie'))
   );
 
@@ -40,16 +40,22 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
     )
   );
 
-  const isAssorted = product.is_custom_assorted || product.isCustomAssorted || isPackOf4 || isPackOf1 || isBrownie;
-  const capacity = product.assorted_capacity || product.assortedCapacity || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (isBrownie ? 1 : 3)));
+  // ONLY treat as assorted if admin explicitly enabled it OR it's an assorted tin/pack-of-4
+  const isAssorted = Boolean(
+    product.is_custom_assorted || 
+    product.isCustomAssorted || 
+    (product.name && (product.name.toLowerCase().includes('assorted') || isPackOf4))
+  );
 
-  // Flour choice for all brownies & healthy bakes (Classic Maida vs Healthy Ragi)
-  const hasFlourChoice = isBrownie || product.category === 'healthy-bakes' || product.has_flour_choice || product.hasFlourChoice;
+  const capacity = product.assorted_capacity || product.assortedCapacity || (isPackOf4 ? 4 : (isPackOf1 ? 1 : 3));
+
+  // Flour choice for all brownies (Classic Maida vs Healthy Ragi) OR if explicitly set by admin
+  const hasFlourChoice = Boolean(isBrownie || product.has_flour_choice || product.hasFlourChoice);
   const flourOptions = product.flourOptions || ['Classic Maida', 'Healthy Ragi'];
   const [selectedFlour, setSelectedFlour] = useState('Classic Maida');
 
   // Piece count display
-  const pieceCount = product.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : (product.pieces ? `${product.pieces} Pieces` : (isBrownie ? '1 Piece' : null)))));
+  const pieceCount = product.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 && isAssorted ? '1 Piece (Pack of 1)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : (product.pieces ? `${product.pieces} Pieces` : (isBrownie && isAssorted ? (capacity === 1 ? '1 Piece' : `${capacity} Pieces`) : null)))));
   
   // Available flavours: NEVER show cookies on brownies!
   const isCookieDefault = (arr) => Array.isArray(arr) && arr.includes('Signature Chocolate Chip');

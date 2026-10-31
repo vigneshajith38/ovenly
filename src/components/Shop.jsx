@@ -49,8 +49,9 @@ const Shop = ({ featuredOnly = false }) => {
             (p.description && (p.description.toLowerCase().includes('healthy') || p.description.toLowerCase().includes('ragi')))
           );
 
+          // ONLY true if it's actually a brownie! Never treat all healthy-bakes as brownies!
           const isBrownie = Boolean(
-            (p.category && (p.category.toLowerCase().includes('brownie') || p.category === 'healthy-bakes')) ||
+            (p.category && p.category.toLowerCase().includes('brownie')) ||
             (p.name && p.name.toLowerCase().includes('brownie'))
           );
 
@@ -68,16 +69,18 @@ const Shop = ({ featuredOnly = false }) => {
             )
           );
 
-          // All brownies and healthy bakes are customizable even for pack of 1
+          // Custom assortment ONLY if explicitly set in admin (p.is_custom_assorted) OR named assorted tin/box
           const isCustomAssorted = Boolean(
-            p.is_custom_assorted || p.isCustomAssorted || isPackOf4 || isPackOf1 || isBrownie
+            p.is_custom_assorted || 
+            p.isCustomAssorted || 
+            (p.name && (p.name.toLowerCase().includes('assorted') || isPackOf4))
           );
 
           let capacity = p.assorted_capacity || p.assortedCapacity;
           if (!capacity) {
             if (isPackOf4) capacity = 4;
             else if (isPackOf1) capacity = 1;
-            else if (isBrownie) capacity = 1; // Default single brownie piece is 1
+            else if (isBrownie && isCustomAssorted) capacity = 1;
             else capacity = 3;
           }
           
@@ -90,11 +93,11 @@ const Shop = ({ featuredOnly = false }) => {
             isPackOf1,
             isPackOf4,
             isCustomAssorted,
-            assortedCapacity: capacity,
+            assortedCapacity: isCustomAssorted ? capacity : undefined,
             assortedFlavours: p.assorted_flavours,
-            pieceCount: p.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : (isBrownie ? '1 Piece' : undefined))))),
+            pieceCount: p.piece_count || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 && isCustomAssorted ? '1 Piece (Pack of 1)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : (isBrownie && isCustomAssorted ? (capacity === 1 ? '1 Piece' : `${capacity} Pieces`) : undefined))))),
             pieces: p.pieces || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (p.name?.includes('500g') ? 9 : undefined))),
-            hasFlourChoice: isBrownie || isHealthy || p.has_flour_choice,
+            hasFlourChoice: Boolean(isBrownie || p.has_flour_choice),
             flourOptions: ['Classic Maida', 'Healthy Ragi']
           };
         });
@@ -115,7 +118,7 @@ const Shop = ({ featuredOnly = false }) => {
     ? dbProducts.slice(0, 3) 
     : dbProducts.filter(p => {
         const isBrownie = Boolean(
-          (p.category && (p.category.toLowerCase().includes('brownie') || p.category === 'healthy-bakes')) ||
+          (p.category && p.category.toLowerCase().includes('brownie')) ||
           (p.name && p.name.toLowerCase().includes('brownie'))
         );
         const isHealthy = Boolean(
@@ -127,7 +130,7 @@ const Shop = ({ featuredOnly = false }) => {
         );
 
         if (activeCategory === 'healthy-bakes') {
-          return isHealthy || p.category === 'healthy-bakes' || (isBrownie && p.hasFlourChoice);
+          return isHealthy;
         }
         if (activeCategory === 'cookie-tins') {
           return ((p.category === 'cookie-tins' || p.category === 'cookies' || p.isCustomAssorted || p.is_custom_assorted) && !isBrownie && p.category !== 'healthy-bakes');
