@@ -145,6 +145,34 @@
   text-decoration: underline;
 }
 
+.cart-add-another-mix-btn {
+  margin-top: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #fdfaf3;
+  border: 1.5px dashed var(--color-caramel);
+  color: var(--color-caramel);
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 1px 3px rgba(198, 124, 78, 0.08);
+}
+
+.cart-add-another-mix-btn:hover {
+  background: var(--color-caramel);
+  color: #ffffff;
+  border-style: solid;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(198, 124, 78, 0.25);
+}
+
 .cart-footer {
   padding: 16px 20px 20px;
   border-top: 2px solid var(--color-warm-vanilla);

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   X, Minus, Plus, ShoppingBag, CalendarClock, MapPin, 
   Navigation, Truck, Store, CheckCircle2, AlertCircle, 
@@ -51,7 +52,21 @@ const isBeforeThreeHours = (dateValue) => {
 };
 
 const CartDrawer = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, cartTotal } = useCart();
+
+  const handleAddAnotherMix = (item) => {
+    setIsCartOpen(false);
+    if (location.pathname !== '/shop') {
+      navigate('/shop');
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('ovenly:customize-product', { detail: { productId: item.id } }));
+      }, 350);
+    } else {
+      window.dispatchEvent(new CustomEvent('ovenly:customize-product', { detail: { productId: item.id } }));
+    }
+  };
   const [orderType, setOrderType] = useState('porter'); // 'porter' | 'pickup'
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -399,6 +414,17 @@ const CartDrawer = () => {
                     </div>
                     <button className="remove-btn" onClick={() => removeFromCart(item.id, item.options)}>Remove</button>
                   </div>
+
+                  {(item.is_custom_assorted || item.isCustomAssorted || item.options?.includes('Custom Assorted') || item.options?.includes('Flavour:')) && (
+                    <button 
+                      type="button" 
+                      className="cart-add-another-mix-btn"
+                      onClick={() => handleAddAnotherMix(item)}
+                      title="Add another box of this treat with different flavours"
+                    >
+                      <Sparkles size={12} /> + Mix another box with different flavours
+                    </button>
+                  )}
                 </div>
               </div>
             ))

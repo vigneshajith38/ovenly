@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, X, Plus, Minus, Check, Sparkles } from 'lucide-react';
+import { ShoppingBag, X, Plus, Minus, Check, Sparkles, RotateCcw } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './ProductCard.css';
 
@@ -23,7 +23,10 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const cardRef = useRef(null);
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
+
+  const cartItemsForThisProduct = (cart || []).filter(item => item.id === product.id);
+  const totalInCart = cartItemsForThisProduct.reduce((sum, item) => sum + item.quantity, 0);
 
   const hasVariants = Array.isArray(product.quantityVariants) && product.quantityVariants.length > 0;
   const [selectedVariant, setSelectedVariant] = useState(() => hasVariants ? product.quantityVariants[0] : null);
@@ -104,6 +107,32 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
     product.customisationOptions?.length > 0 ? product.customisationOptions[0] : ''
   );
 
+  // Listen for external requests to customize a new box of this product (e.g. from Cart Drawer)
+  useEffect(() => {
+    const handleCustomizeRequest = (e) => {
+      if (e.detail && e.detail.productId === product.id) {
+        if (!product.available) return;
+        // Reset slots for a brand new mix
+        if (capacity === 1 && availableFlavours.length > 0) {
+          const match = availableFlavours.find(f => 
+            product.name && product.name.toLowerCase().includes(f.toLowerCase())
+          );
+          setSelectedSlots([match || availableFlavours[0]]);
+        } else {
+          setSelectedSlots([]);
+        }
+        setQuantity(1);
+        setIsPopoverOpen(true);
+        if (cardRef.current) {
+          cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    };
+
+    window.addEventListener('ovenly:customize-product', handleCustomizeRequest);
+    return () => window.removeEventListener('ovenly:customize-product', handleCustomizeRequest);
+  }, [product.id, product.available, capacity, availableFlavours, product.name]);
+
   // Close when clicking outside
   useEffect(() => {
     if (!isPopoverOpen) return;
@@ -153,12 +182,29 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
       if (selectedSlots.includes(flavour)) {
         const lastIdx = selectedSlots.lastIndexOf(flavour);
         setSelectedSlots(selectedSlots.filter((_, idx) => idx !== lastIdx));
+      } else {
+        // When all slots are full and user clicks a new flavour, replace the last slot
+        const next = [...selectedSlots];
+        next[next.length - 1] = flavour;
+        setSelectedSlots(next);
       }
     }
   };
 
   const handleRemoveSlot = (index) => {
     setSelectedSlots(selectedSlots.filter((_, idx) => idx !== index));
+  };
+
+  const handleClearSlots = (e) => {
+    if (e) e.stopPropagation();
+    if (capacity === 1 && availableFlavours.length > 0) {
+      const match = availableFlavours.find(f => 
+        product.name && product.name.toLowerCase().includes(f.toLowerCase())
+      );
+      setSelectedSlots([match || availableFlavours[0]]);
+    } else {
+      setSelectedSlots([]);
+    }
   };
 
   // Top preset: intelligently distribute flavours to match capacity
@@ -221,6 +267,16 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
     setTimeout(() => {
       setJustAdded(false);
       setIsPopoverOpen(false);
+      // Reset slots and quantity for mixing a new box next time!
+      if (capacity === 1 && availableFlavours.length > 0) {
+        const match = availableFlavours.find(f => 
+          product.name && product.name.toLowerCase().includes(f.toLowerCase())
+        );
+        setSelectedSlots([match || availableFlavours[0]]);
+      } else {
+        setSelectedSlots([]);
+      }
+      setQuantity(1);
     }, 800);
   };
 
@@ -329,8 +385,10 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
               >
                 {product.available 
                   ? (isAssorted 
-                      ? (capacity === 1 ? '✨ Customize (1 Piece)' : `✨ Pick ${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}`) 
-                      : (hasVariants ? '✨ Choose & Order' : 'View Details')) 
+                      ? (totalInCart > 0
+                          ? `✨ Mix Another Box (${totalInCart} in Cart)`
+                          : (capacity === 1 ? '✨ Customize (1 Piece)' : `✨ Pick ${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}`)) 
+                      : (hasVariants ? '✨ Choose & Order' : (totalInCart > 0 ? `+ Add More (${totalInCart})` : 'View Details'))) 
                   : 'Sold Out'}
               </button>
             </div>
@@ -384,17 +442,43 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
             {isAssorted ? (
               <div className="popover-assorted-builder">
                 <div className="popover-assorted-header-row">
-                  <span className="popover-assorted-label">
-                    {capacity === 1 
-                      ? 'Choose Your Brownie Flavour:' 
-                      : `Choose ${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}:`}
-                  </span>
-                  {capacity > 1 && (
-                    <button type="button" onClick={applyTopPreset} className="popover-preset-chip">
-                      <Sparkles size={11} /> Top {capacity} Mix
-                    </button>
-                  )}
+                  <div className="popover-assorted-title-col">
+                    <span className="popover-assorted-label">
+                      {capacity === 1 
+                        ? 'Choose Your Brownie Flavour:' 
+                        : `Choose ${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}:`}
+                    </span>
+                    {totalInCart > 0 && (
+                      <span className="popover-box-badge">
+                        ✨ Box #{totalInCart + 1}
+                      </span>
+                    )}
+                  </div>
+                  <div className="popover-assorted-actions">
+                    {selectedSlots.length > 0 && (
+                      <button 
+                        type="button" 
+                        onClick={handleClearSlots} 
+                        className="popover-reset-chip"
+                        title="Clear selections to start a fresh mix"
+                      >
+                        <RotateCcw size={11} /> Reset
+                      </button>
+                    )}
+                    {capacity > 1 && (
+                      <button type="button" onClick={applyTopPreset} className="popover-preset-chip">
+                        <Sparkles size={11} /> Top {capacity} Mix
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {totalInCart > 0 && (
+                  <div className="popover-cart-summary-tag">
+                    <span>💡 {totalInCart} {totalInCart > 1 ? 'boxes' : 'box'} already in cart</span>
+                    <span className="summary-hint">• Mixing a new box!</span>
+                  </div>
+                )}
 
                 {/* Visual Slots Bar or Single Flavour Preview */}
                 {capacity === 1 ? (
@@ -512,7 +596,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
                   `Pick ${capacity - selectedSlots.length} more`
                 ) : (
                   <>
-                    <ShoppingBag size={14} /> Add • ₹{activePrice * quantity}
+                    <ShoppingBag size={14} /> {totalInCart > 0 && isAssorted ? `Add Box #${totalInCart + 1} • ₹${activePrice * quantity}` : `Add • ₹${activePrice * quantity}`}
                   </>
                 )}
               </button>
