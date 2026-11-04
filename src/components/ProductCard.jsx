@@ -386,7 +386,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
                 {product.available 
                   ? (isAssorted 
                       ? (totalInCart > 0
-                          ? `✨ Mix Another Box (${totalInCart} in Cart)`
+                          ? `✨ Customize Your Next Box (${totalInCart} in Cart)`
                           : (capacity === 1 ? '✨ Customize (1 Piece)' : `✨ Pick ${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}`)) 
                       : (hasVariants ? '✨ Choose & Order' : (totalInCart > 0 ? `+ Add More (${totalInCart})` : 'View Details'))) 
                   : 'Sold Out'}
@@ -476,7 +476,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
                 {totalInCart > 0 && (
                   <div className="popover-cart-summary-tag">
                     <span>💡 {totalInCart} {totalInCart > 1 ? 'boxes' : 'box'} already in cart</span>
-                    <span className="summary-hint">• Mixing a new box!</span>
+                    <span className="summary-hint">• Customizing your next box!</span>
                   </div>
                 )}
 

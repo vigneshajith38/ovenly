@@ -421,9 +421,9 @@ const CartDrawer = () => {
                       type="button" 
                       className="cart-add-another-mix-btn"
                       onClick={() => handleAddAnotherMix(item)}
-                      title="Add another box of this treat with different flavours"
+                      title="Customize another box of this treat with different flavours"
                     >
-                      <Sparkles size={12} /> + Mix another box with different flavours
+                      <Sparkles size={12} /> + Customize your next box with different flavours
                     </button>
                   )}
                 </div>
