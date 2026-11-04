@@ -361,6 +361,7 @@ const CartDrawer = () => {
       }
     } else {
       message += `*Fulfillment Method:* 🛍️ Self Pick up%0A`;
+      message += `*Pickup Location:* Near Holiday Village, Konanakunte, Bengaluru%0A`;
       if (deliveryDate) {
         const formattedDate = formatReadableTime(new Date(deliveryDate)) || new Date(deliveryDate).toLocaleString();
         message += `*Requested Pickup Time:* ${encodeURIComponent(formattedDate)}%0A`;
@@ -471,7 +472,7 @@ const CartDrawer = () => {
                   </div>
                   <div className="fulfillment-card-info">
                     <strong className="fulfillment-title">Self Pick up</strong>
-                    <span className="fulfillment-sub">Collect at Ovenly</span>
+                    <span className="fulfillment-sub">Near Holiday Village, Konanakunte</span>
                   </div>
                 </button>
               </div>
@@ -483,7 +484,7 @@ const CartDrawer = () => {
                 </div>
               ) : (
                 <div className="fulfillment-hint-badge pickup-hint">
-                  🛍️ <span><strong>Self Pick up:</strong> We'll share our kitchen pickup location & exact directions on WhatsApp!</span>
+                  📍 <span><strong>Self Pick up:</strong> Near Holiday Village, Konanakunte, Bengaluru. Exact kitchen address & directions sent on WhatsApp!</span>
                 </div>
               )}
             </div>
@@ -674,18 +675,31 @@ const CartDrawer = () => {
                   </div>
                 </>
               ) : (
-                /* Pickup Specific: Notes */
-                <div className="cart-input-group">
-                  <label>
-                    <MapPin size={14} /> Pickup Notes (Optional)
-                  </label>
-                  <input 
-                    type="text"
-                    placeholder="E.g., Special instructions or pickup preference"
-                    value={pickupNotes}
-                    onChange={(e) => setPickupNotes(e.target.value)}
-                  />
-                </div>
+                /* Pickup Specific: Location & Notes */
+                <>
+                  <div className="pickup-location-card">
+                    <div className="pickup-loc-icon">
+                      <MapPin size={18} />
+                    </div>
+                    <div className="pickup-loc-details">
+                      <span className="pickup-loc-label">Pickup Point</span>
+                      <strong className="pickup-loc-name">Near Holiday Village, Konanakunte</strong>
+                      <span className="pickup-loc-note">Bengaluru • Exact kitchen location & directions will be shared on WhatsApp</span>
+                    </div>
+                  </div>
+
+                  <div className="cart-input-group">
+                    <label>
+                      <MapPin size={14} /> Pickup Notes (Optional)
+                    </label>
+                    <input 
+                      type="text"
+                      placeholder="E.g., Special instructions or pickup preference"
+                      value={pickupNotes}
+                      onChange={(e) => setPickupNotes(e.target.value)}
+                    />
+                  </div>
+                </>
               )}
             </div>
             

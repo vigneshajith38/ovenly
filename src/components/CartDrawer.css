@@ -295,6 +295,58 @@
   color: #1e5631;
 }
 
+/* Pickup Location Card */
+.pickup-location-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f7faf7;
+  border: 1.5px solid #d4ebd9;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 4px rgba(6, 75, 53, 0.04);
+}
+
+.pickup-loc-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-forest);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pickup-loc-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pickup-loc-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-forest);
+}
+
+.pickup-loc-name {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--color-dark-chocolate);
+  line-height: 1.25;
+}
+
+.pickup-loc-note {
+  font-size: 0.74rem;
+  color: #555555;
+  line-height: 1.35;
+}
+
 /* Error Banner */
 .cart-error-banner {
   display: flex;
