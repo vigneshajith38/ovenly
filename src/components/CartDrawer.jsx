@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   X, Minus, Plus, ShoppingBag, CalendarClock, MapPin, 
   Navigation, Truck, Store, CheckCircle2, AlertCircle, 
-  Crosshair, Loader2, ExternalLink, Check, Sparkles, Clock
+  Crosshair, Loader2, ExternalLink, Check, Sparkles, Clock,
+  Package
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import './CartDrawer.css';
@@ -67,7 +68,8 @@ const CartDrawer = () => {
       window.dispatchEvent(new CustomEvent('ovenly:customize-product', { detail: { productId: item.id } }));
     }
   };
-  const [orderType, setOrderType] = useState('porter'); // 'porter' | 'pickup'
+  const [orderType, setOrderType] = useState('porter'); // 'porter' | 'courier' | 'pickup'
+  const [courierAddress, setCourierAddress] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [mapsLink, setMapsLink] = useState('');
@@ -316,10 +318,15 @@ const CartDrawer = () => {
       return;
     }
 
+    if (orderType === 'courier' && !courierAddress.trim()) {
+      setFormError('Please enter your complete courier address (Flat/House No, Street, City, Pincode).');
+      return;
+    }
+
     // Minimum 3-hour preparation time validation
     if (deliveryDate && isBeforeThreeHours(deliveryDate)) {
       const minTimeStr = formatReadableTime(getThreeHoursFromNow());
-      const prepError = `Minimum 3 hours preparation time required! Our treats are baked fresh to order. Earliest available ${orderType === 'porter' ? 'delivery' : 'pickup'} is after ${minTimeStr}.`;
+      const prepError = `Minimum 3 hours preparation time required! Our treats are baked fresh to order. Earliest available ${orderType === 'porter' ? 'delivery' : (orderType === 'courier' ? 'dispatch' : 'pickup')} is after ${minTimeStr}.`;
       setTimeWarning(prepError);
       setFormError(prepError);
       return;
@@ -358,6 +365,18 @@ const CartDrawer = () => {
         message += `*Maps Location:* ${encodeURIComponent(mapsLink)}${encodeURIComponent(accText)}%0A`;
       } else if (shareOnWhatsApp) {
         message += `*Maps Location:* 📍 Will share live location pin directly in this chat%0A`;
+      }
+    } else if (orderType === 'courier') {
+      message += `*Fulfillment Method:* 📦 Delivery via Courier%0A`;
+      if (deliveryDate) {
+        const formattedDate = formatReadableTime(new Date(deliveryDate)) || new Date(deliveryDate).toLocaleString();
+        message += `*Preferred Dispatch Time:* ${encodeURIComponent(formattedDate)}%0A`;
+      } else {
+        const earliestStr = formatReadableTime(getThreeHoursFromNow());
+        message += `*Preferred Dispatch Time:* Earliest available (~${encodeURIComponent(earliestStr)}, min. 3 hrs prep)%0A`;
+      }
+      if (courierAddress) {
+        message += `*Courier Address:* ${encodeURIComponent(courierAddress)}%0A`;
       }
     } else {
       message += `*Fulfillment Method:* 🛍️ Self Pick up%0A`;
@@ -455,7 +474,24 @@ const CartDrawer = () => {
                   </div>
                   <div className="fulfillment-card-info">
                     <strong className="fulfillment-title">Porter Delivery</strong>
-                    <span className="fulfillment-sub">To your doorstep</span>
+                    <span className="fulfillment-sub">Local doorstep</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  className={`fulfillment-card ${orderType === 'courier' ? 'active' : ''}`}
+                  onClick={() => { setOrderType('courier'); setFormError(''); }}
+                >
+                  <div className="fulfillment-card-top">
+                    <div className="fulfillment-icon-box">
+                      <Package size={20} />
+                    </div>
+                    {orderType === 'courier' && <CheckCircle2 size={16} className="active-check" />}
+                  </div>
+                  <div className="fulfillment-card-info">
+                    <strong className="fulfillment-title">Courier</strong>
+                    <span className="fulfillment-sub">Standard shipping</span>
                   </div>
                 </button>
 
@@ -472,7 +508,7 @@ const CartDrawer = () => {
                   </div>
                   <div className="fulfillment-card-info">
                     <strong className="fulfillment-title">Self Pick up</strong>
-                    <span className="fulfillment-sub">Near Holiday Village, Konanakunte</span>
+                    <span className="fulfillment-sub">Konanakunte</span>
                   </div>
                 </button>
               </div>
@@ -481,6 +517,10 @@ const CartDrawer = () => {
               {orderType === 'porter' ? (
                 <div className="fulfillment-hint-badge porter-hint">
                   🛵 <span><strong>Porter Delivery:</strong> We'll dispatch via Porter once freshly baked. Delivery fare as per actuals.</span>
+                </div>
+              ) : orderType === 'courier' ? (
+                <div className="fulfillment-hint-badge courier-hint">
+                  📦 <span><strong>Courier Shipping:</strong> Carefully packed & dispatched via courier. Shipping charges calculated and shared on WhatsApp!</span>
                 </div>
               ) : (
                 <div className="fulfillment-hint-badge pickup-hint">
@@ -505,7 +545,7 @@ const CartDrawer = () => {
                 <div className="cart-input-header">
                   <label htmlFor="delivery-datetime-input">
                     <CalendarClock size={15} /> 
-                    {orderType === 'porter' ? 'Delivery Date & Time' : 'Pickup Date & Time'}
+                    {orderType === 'porter' ? 'Delivery Date & Time' : (orderType === 'courier' ? 'Preferred Dispatch Date & Time' : 'Pickup Date & Time')}
                   </label>
                   <span className="prep-time-pill" title="All treats are baked fresh to order">
                     <Clock size={11} /> Min. 3h prep
@@ -549,7 +589,7 @@ const CartDrawer = () => {
               </div>
 
               {/* Porter Specific: Address and Maps */}
-              {orderType === 'porter' ? (
+              {orderType === 'porter' && (
                 <>
                   <div className="cart-input-group">
                     <label>
@@ -674,8 +714,28 @@ const CartDrawer = () => {
                     </div>
                   </div>
                 </>
-              ) : (
-                /* Pickup Specific: Location & Notes */
+              )}
+
+              {/* Courier Specific: Courier Address */}
+              {orderType === 'courier' && (
+                <div className="cart-input-group courier-address-group animate-fade-in">
+                  <label>
+                    <Package size={14} /> Courier Address <span className="req-star">*</span>
+                  </label>
+                  <textarea 
+                    placeholder="Full Name, Flat/House No, Building/Street, Area, City, State & Pincode"
+                    value={courierAddress}
+                    onChange={(e) => { setCourierAddress(e.target.value); if(formError) setFormError(''); }}
+                    rows={3}
+                  />
+                  <span className="courier-address-helper">
+                    📮 Please provide your complete postal address including city and 6-digit pincode.
+                  </span>
+                </div>
+              )}
+
+              {/* Pickup Specific: Location & Notes */}
+              {orderType === 'pickup' && (
                 <>
                   <div className="pickup-location-card">
                     <div className="pickup-loc-icon">
@@ -707,14 +767,14 @@ const CartDrawer = () => {
               <div className="cart-total-label">
                 <span>Total:</span>
                 <span className="fulfillment-badge-pill">
-                  {orderType === 'porter' ? '🛵 Porter' : '🛍️ Pick up'}
+                  {orderType === 'porter' ? '🛵 Porter' : (orderType === 'courier' ? '📦 Courier' : '🛍️ Pick up')}
                 </span>
               </div>
               <span className="cart-total-amount">₹{cartTotal}</span>
             </div>
 
             <button className="btn btn-whatsapp cart-checkout-btn" onClick={handleCheckout}>
-              Proceed with {orderType === 'porter' ? 'Porter Delivery' : 'Pick up'}
+              Proceed with {orderType === 'porter' ? 'Porter Delivery' : (orderType === 'courier' ? 'Courier Delivery' : 'Pick up')}
             </button>
           </div>
         )}

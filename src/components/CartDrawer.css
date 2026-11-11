@@ -198,8 +198,8 @@
 
 .fulfillment-toggle-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
   margin-bottom: 10px;
 }
 
@@ -840,4 +840,25 @@
   background: #1eb956;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+}
+
+.courier-hint {
+  background: #f0f4fa;
+  border: 1px solid #cce0f5;
+  color: #173b6c;
+}
+
+.courier-address-helper {
+  display: block;
+  font-size: 0.74rem;
+  color: #666;
+  margin-top: 5px;
+  line-height: 1.35;
+}
+
+@media (max-width: 400px) {
+  .fulfillment-toggle-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
