@@ -21,7 +21,7 @@ const AdminProducts = () => {
   const [assortedFlavoursInput, setAssortedFlavoursInput] = useState(
     'Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp'
   );
-  const [isPublished, setIsPublished] = useState(false);
+  const [isPublished, setIsPublished] = useState(true);
   const [isAvailable, setIsAvailable] = useState(true);
   const [quantityVariants, setQuantityVariants] = useState([]);
   const [photo, setPhoto] = useState(null);
@@ -141,7 +141,7 @@ const AdminProducts = () => {
       setAssortedCapacity(1);
       setAssortedFlavoursInput('Signature Chocolate Chip, Double Chocolate Fudge, Red Velvet White Choc, Biscoff Lotus Swirl, Nutty Walnut Crunch, Salted Caramel Crisp');
       setQuantityVariants([]);
-      setIsPublished(false);
+      setIsPublished(true);
       setIsAvailable(true);
       setPhotoPreview('');
       setPhoto(null);

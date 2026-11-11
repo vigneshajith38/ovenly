@@ -4,24 +4,29 @@ import { ShoppingBag } from 'lucide-react';
 import { DoodleHeart, DoodleSparkle, DoodleFlower } from './Doodles';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
+import { products as fallbackProducts } from '../data/products';
 import './BestSellers.css';
 
 const BestSellers = () => {
   const { addToCart } = useCart();
-  const [bestSellers, setBestSellers] = useState([]);
+  const [bestSellers, setBestSellers] = useState(() => fallbackProducts.slice(0, 3));
   
   useEffect(() => {
     const fetchBestSellers = async () => {
-      if (!supabase) return;
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_published', true)
-        .order('display_order', { ascending: true })
-        .limit(3);
-        
-      if (!error && data) {
-        setBestSellers(data.map(p => {
+      if (!supabase) {
+        setBestSellers(fallbackProducts.slice(0, 3));
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_published', true)
+          .order('display_order', { ascending: true })
+          .limit(3);
+          
+        if (!error && data && data.length > 0) {
+          setBestSellers(data.map(p => {
           let quantityVariants = [];
           if (Array.isArray(p.quantity_variants) && p.quantity_variants.length > 0) {
             quantityVariants = p.quantity_variants;
@@ -45,6 +50,10 @@ const BestSellers = () => {
             available: p.is_available
           };
         }));
+        }
+      } catch (err) {
+        console.error('Error fetching bestsellers:', err);
+        setBestSellers(fallbackProducts.slice(0, 3));
       }
     };
     fetchBestSellers();
