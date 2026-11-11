@@ -624,3 +624,13 @@
   color: white;
 }
 
+.modal-cupcake-min-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 3px 10px;
+  border-radius: 14px;
+}
+

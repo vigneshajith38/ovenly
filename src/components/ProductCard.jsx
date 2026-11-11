@@ -19,8 +19,15 @@ const DEFAULT_BROWNIE_FLAVOURS = [
 ];
 
 const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) => {
+  const isCupcake = Boolean(
+    product.isCupcake ||
+    (product.category && product.category.toLowerCase().includes('cupcake')) ||
+    (product.name && product.name.toLowerCase().includes('cupcake'))
+  );
+  const minQuantity = product.minOrder || (isCupcake ? 3 : 1);
+
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(minQuantity);
   const [justAdded, setJustAdded] = useState(false);
   const cardRef = useRef(null);
   const { cart, addToCart } = useCart();
@@ -121,7 +128,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
         } else {
           setSelectedSlots([]);
         }
-        setQuantity(1);
+        setQuantity(minQuantity);
         setIsPopoverOpen(true);
         if (cardRef.current) {
           cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -276,7 +283,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
       } else {
         setSelectedSlots([]);
       }
-      setQuantity(1);
+      setQuantity(minQuantity);
     }, 800);
   };
 
@@ -388,7 +395,7 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
                       ? (totalInCart > 0
                           ? `✨ Customize Your Next Box (${totalInCart} in Cart)`
                           : (capacity === 1 ? '✨ Customize (1 Piece)' : `✨ Pick ${capacity} ${isBrownie ? 'Pieces' : 'Flavours'}`)) 
-                      : (hasVariants ? '✨ Choose & Order' : (totalInCart > 0 ? `+ Add More (${totalInCart})` : 'View Details'))) 
+                      : (hasVariants ? '✨ Choose & Order' : (minQuantity > 1 ? (totalInCart > 0 ? `+ Add More (${totalInCart})` : `Order (Min. ${minQuantity})`) : (totalInCart > 0 ? `+ Add More (${totalInCart})` : 'View Details')))) 
                   : 'Sold Out'}
               </button>
             </div>
@@ -561,13 +568,18 @@ const ProductCard = ({ product, cookieTinOptions = [], brownieOptions = [] }) =>
             )}
 
             {/* Cart Details Footer */}
+            {minQuantity > 1 && (
+              <div className="cupcake-min-inline-hint">
+                🧁 Minimum order: {minQuantity} pieces
+              </div>
+            )}
             <div className="card-pop-footer">
               <span className="product-price pop-price">₹{activePrice}</span>
 
               <div className="popover-qty-selector">
                 <button 
                   type="button" 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  onClick={() => setQuantity(Math.max(minQuantity, quantity - 1))}
                   aria-label="Decrease quantity"
                 >
                   <Minus size={13} />

@@ -175,6 +175,8 @@ export const products = [
     "name": "Redvelvet cupcake",
     "price": 60,
     "category": "cupcakes",
+    "minOrder": 3,
+    "pieceCount": "Min. 3 Pieces",
     "isCustomAssorted": false,
     "assortedFlavours": [
       "Signature Chocolate Chip",
@@ -227,6 +229,8 @@ export const products = [
     "name": "Chocolate cupcake",
     "price": 45,
     "category": "cupcakes",
+    "minOrder": 3,
+    "pieceCount": "Min. 3 Pieces",
     "isCustomAssorted": false,
     "assortedFlavours": [
       "Signature Chocolate Chip",

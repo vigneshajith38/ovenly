@@ -323,6 +323,20 @@ const CartDrawer = () => {
       return;
     }
 
+    // Minimum quantity per item validation (e.g. cupcakes)
+    for (const item of cart) {
+      const isCupcake = Boolean(
+        item.isCupcake ||
+        (item.category && item.category.toLowerCase().includes('cupcake')) ||
+        (item.name && item.name.toLowerCase().includes('cupcake'))
+      );
+      const minQ = item.minOrder || (isCupcake ? 3 : 1);
+      if (item.quantity < minQ) {
+        setFormError(`Minimum order for ${item.name} is ${minQ} pieces. Please update the quantity to at least ${minQ}.`);
+        return;
+      }
+    }
+
     // Minimum 3-hour preparation time validation
     if (deliveryDate && isBeforeThreeHours(deliveryDate)) {
       const minTimeStr = formatReadableTime(getThreeHoursFromNow());
@@ -423,12 +437,35 @@ const CartDrawer = () => {
                 <img src={item.image} alt={item.name} className="cart-item-image" />
                 <div className="cart-item-details">
                   <h4>{item.name}</h4>
+                  {Boolean((item.minOrder && item.minOrder > 1) || (item.category && item.category.toLowerCase().includes('cupcake')) || (item.name && item.name.toLowerCase().includes('cupcake'))) && (
+                    <span className="cart-cupcake-min-badge">
+                      🧁 Min. order: {item.minOrder || 3} pcs
+                    </span>
+                  )}
                   {item.options && <p className="cart-item-options">{item.options}</p>}
                   <p className="cart-item-price">₹{item.price * item.quantity}</p>
                   
                   <div className="cart-item-actions">
                     <div className="quantity-selector small">
-                      <button onClick={() => updateQuantity(item.id, item.options, -1)}><Minus size={14}/></button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const isCupcake = Boolean(
+                            item.isCupcake ||
+                            (item.category && item.category.toLowerCase().includes('cupcake')) ||
+                            (item.name && item.name.toLowerCase().includes('cupcake'))
+                          );
+                          const minQ = item.minOrder || (isCupcake ? 3 : 1);
+                          if (item.quantity <= minQ) {
+                            setFormError(`Minimum order for ${item.name} is ${minQ} pieces. Use "Remove" to delete.`);
+                            return;
+                          }
+                          updateQuantity(item.id, item.options, -1);
+                        }}
+                        title={`Decrease quantity`}
+                      >
+                        <Minus size={14}/>
+                      </button>
                       <span>{item.quantity}</span>
                       <button onClick={() => updateQuantity(item.id, item.options, 1)}><Plus size={14}/></button>
                     </div>

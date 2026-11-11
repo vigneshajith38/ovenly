@@ -20,7 +20,13 @@ const DEFAULT_BROWNIE_FLAVOURS = [
 ];
 
 const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions = [] }) => {
-  const [quantity, setQuantity] = useState(1);
+  const isCupcake = Boolean(
+    product.isCupcake ||
+    (product.category && product.category.toLowerCase().includes('cupcake')) ||
+    (product.name && product.name.toLowerCase().includes('cupcake'))
+  );
+  const minQuantity = product.minOrder || (isCupcake ? 3 : 1);
+  const [quantity, setQuantity] = useState(minQuantity);
   const hasVariants = Array.isArray(product.quantityVariants) && product.quantityVariants.length > 0;
   const [selectedVariant, setSelectedVariant] = useState(() => hasVariants ? product.quantityVariants[0] : null);
 
@@ -433,9 +439,14 @@ const ProductModal = ({ product, onClose, cookieTinOptions = [], brownieOptions 
             
             {/* Quantity Selector */}
             <div className="modal-quantity">
-              <label className="modal-section-label">Quantity:</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <label className="modal-section-label" style={{ margin: 0 }}>Quantity:</label>
+                {minQuantity > 1 && (
+                  <span className="modal-cupcake-min-pill">🧁 Min. order: {minQuantity} pcs</span>
+                )}
+              </div>
               <div className="quantity-selector">
-                <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
+                <button type="button" onClick={() => setQuantity(Math.max(minQuantity, quantity - 1))}>-</button>
                 <span>{quantity}</span>
                 <button type="button" onClick={() => setQuantity(quantity + 1)}>+</button>
               </div>

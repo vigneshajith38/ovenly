@@ -116,6 +116,13 @@ const Shop = ({ featuredOnly = false }) => {
             ? Boolean(p.has_flour_choice)
             : (meta.hasFlourChoice !== undefined ? Boolean(meta.hasFlourChoice) : Boolean(isBrownie));
           
+          const isCupcake = Boolean(
+            (p.category && p.category.toLowerCase().includes('cupcake')) ||
+            (p.name && p.name.toLowerCase().includes('cupcake'))
+          );
+
+          const minOrder = p.min_order || meta.minOrder || (isCupcake ? 3 : 1);
+
           return {
             ...p,
             description: cleanDescription,
@@ -124,12 +131,14 @@ const Shop = ({ featuredOnly = false }) => {
             available: p.is_available,
             isBrownie,
             isHealthy,
+            isCupcake,
+            minOrder,
             isPackOf1,
             isPackOf4,
             isCustomAssorted,
             assortedCapacity: isCustomAssorted ? capacity : undefined,
             assortedFlavours: p.assorted_flavours,
-            pieceCount: p.piece_count || meta.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 && isCustomAssorted ? '1 Piece (Pack of 1)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : (isBrownie && isCustomAssorted ? (capacity === 1 ? '1 Piece' : `${capacity} Pieces`) : undefined))))),
+            pieceCount: p.piece_count || meta.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 && isCustomAssorted ? '1 Piece (Pack of 1)' : (p.name?.includes('500g') ? '9 Pieces (500g Slab)' : (p.pieces ? `${p.pieces} Pieces` : (isBrownie && isCustomAssorted ? (capacity === 1 ? '1 Piece' : `${capacity} Pieces`) : (minOrder > 1 ? `Min. ${minOrder} Pieces` : undefined)))))),
             pieces: p.pieces || (isPackOf4 ? 4 : (isPackOf1 ? 1 : (p.name?.includes('500g') ? 9 : undefined))),
             hasFlourChoice,
             flourOptions: ['Classic Maida', 'Healthy Ragi']

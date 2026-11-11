@@ -15,6 +15,7 @@ const AdminProducts = () => {
   const [category, setCategory] = useState('cookie-tins');
   const [dietaryType, setDietaryType] = useState('eggless'); // 'eggless' | 'contains_egg' | 'choice'
   const [pieceCount, setPieceCount] = useState('');
+  const [minOrder, setMinOrder] = useState(1);
   const [hasFlourChoice, setHasFlourChoice] = useState(false);
   const [isCustomAssorted, setIsCustomAssorted] = useState(false);
   const [assortedCapacity, setAssortedCapacity] = useState(3);
@@ -107,6 +108,13 @@ const AdminProducts = () => {
       setDescription(cleanDesc);
       setPrice(product.price);
       setCategory(product.category || (isBrownieProd ? 'brownies' : 'cookie-tins'));
+      const isCupcakeProd = Boolean(
+        (product.category && product.category.toLowerCase().includes('cupcake')) || 
+        (product.name && product.name.toLowerCase().includes('cupcake'))
+      );
+      const initialMinOrder = product.min_order || meta.minOrder || (isCupcakeProd ? 3 : 1);
+      setMinOrder(initialMinOrder);
+
       setDietaryType(product.dietary_type || 'eggless');
       setPieceCount(product.piece_count || meta.pieceCount || (isPackOf4 ? '4 Pieces (Pack of 4)' : (isPackOf1 ? '1 Piece (Pack of 1)' : (product.name?.includes('500g') ? '9 Pieces (500g Slab)' : ''))));
       setHasFlourChoice(meta.hasFlourChoice !== undefined ? Boolean(meta.hasFlourChoice) : Boolean(isBrownieProd || product.has_flour_choice));
@@ -136,6 +144,7 @@ const AdminProducts = () => {
       setCategory('cookie-tins');
       setDietaryType('eggless');
       setPieceCount('');
+      setMinOrder(1);
       setHasFlourChoice(false);
       setIsCustomAssorted(false);
       setAssortedCapacity(1);
@@ -200,13 +209,16 @@ const AdminProducts = () => {
         .replace(/<!--VARIANTS:[\s\S]*?-->/g, '')
         .trim();
 
+      const parsedMinOrder = Math.max(1, parseInt(minOrder, 10) || 1);
+
       const metaObj = {
         variants: validVariants,
         pieceCount: pieceCount || '',
-        hasFlourChoice: Boolean(hasFlourChoice)
+        hasFlourChoice: Boolean(hasFlourChoice),
+        minOrder: parsedMinOrder
       };
 
-      const finalDescription = (validVariants.length > 0 || pieceCount || hasFlourChoice)
+      const finalDescription = (validVariants.length > 0 || pieceCount || hasFlourChoice || parsedMinOrder > 1)
         ? `${cleanDesc}\n\n<!--META:${JSON.stringify(metaObj)}-->\n<!--VARIANTS:${JSON.stringify(validVariants)}-->`
         : cleanDesc;
 
@@ -223,6 +235,7 @@ const AdminProducts = () => {
         is_published: isPublished,
         is_available: isAvailable,
         image_path,
+        min_order: parsedMinOrder,
         is_custom_assorted: Boolean(isCustomAssorted),
         assorted_capacity: isCustomAssorted ? (parseInt(assortedCapacity, 10) || 1) : null,
         assorted_flavours: isCustomAssorted ? flavoursArray : []
@@ -243,12 +256,13 @@ const AdminProducts = () => {
         saveError = res.error;
       }
 
-      // If assorted columns ever fail, fallback smoothly without popup
-      if (saveError && (saveError.message?.includes('assorted') || saveError.message?.includes('column'))) {
-        console.warn('Retrying save without assorted columns:', saveError.message);
+      // If assorted or min_order columns ever fail, fallback smoothly without popup
+      if (saveError && (saveError.message?.includes('assorted') || saveError.message?.includes('column') || saveError.message?.includes('min_order'))) {
+        console.warn('Retrying save without optional columns:', saveError.message);
         delete productData.is_custom_assorted;
         delete productData.assorted_capacity;
         delete productData.assorted_flavours;
+        delete productData.min_order;
 
         const retryRes = currentProduct 
           ? await supabase.from('products').update(productData).eq('id', currentProduct.id)
@@ -334,6 +348,7 @@ ADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,
 ADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb,
 ADD COLUMN IF NOT EXISTS piece_count TEXT,
+ADD COLUMN IF NOT EXISTS min_order INTEGER DEFAULT 1,
 ADD COLUMN IF NOT EXISTS has_flour_choice BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb,
 ADD COLUMN IF NOT EXISTS quantity_variants JSONB;`}
@@ -344,7 +359,7 @@ ADD COLUMN IF NOT EXISTS quantity_variants JSONB;`}
                 className="btn btn-primary" 
                 style={{ padding: '7px 16px', fontSize: '0.85rem' }}
                 onClick={() => {
-                  navigator.clipboard.writeText(`ALTER TABLE products \nADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,\nADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb,\nADD COLUMN IF NOT EXISTS piece_count TEXT,\nADD COLUMN IF NOT EXISTS has_flour_choice BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb,\nADD COLUMN IF NOT EXISTS quantity_variants JSONB;`);
+                  navigator.clipboard.writeText(`ALTER TABLE products \nADD COLUMN IF NOT EXISTS is_custom_assorted BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS assorted_capacity INTEGER DEFAULT 3,\nADD COLUMN IF NOT EXISTS assorted_flavours JSONB DEFAULT '["Signature Chocolate Chip", "Double Chocolate Fudge", "Red Velvet White Choc", "Biscoff Lotus Swirl", "Nutty Walnut Crunch", "Salted Caramel Crisp"]'::jsonb,\nADD COLUMN IF NOT EXISTS piece_count TEXT,\nADD COLUMN IF NOT EXISTS min_order INTEGER DEFAULT 1,\nADD COLUMN IF NOT EXISTS has_flour_choice BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS flour_options JSONB DEFAULT '["Classic Maida", "Healthy Ragi"]'::jsonb,\nADD COLUMN IF NOT EXISTS quantity_variants JSONB;`);
                   setCopiedSql(true);
                   setTimeout(() => setCopiedSql(false), 2500);
                 }}
@@ -380,6 +395,21 @@ ADD COLUMN IF NOT EXISTS quantity_variants JSONB;`}
           </thead>
           <tbody>
             {products.map(product => {
+              const productMeta = (() => {
+                if (product.description) {
+                  const match = product.description.match(/<!--META:([\s\S]*?)-->/);
+                  if (match) {
+                    try { return JSON.parse(match[1]); } catch (e) {}
+                  }
+                }
+                return {};
+              })();
+
+              const minOrderQty = product.min_order || productMeta.minOrder || (
+                (product.category && product.category.toLowerCase().includes('cupcake')) ||
+                (product.name && product.name.toLowerCase().includes('cupcake')) ? 3 : 1
+              );
+
               const productVariants = (() => {
                 if (Array.isArray(product.quantity_variants) && product.quantity_variants.length > 0) return product.quantity_variants;
                 if (product.description) {
@@ -402,6 +432,11 @@ ADD COLUMN IF NOT EXISTS quantity_variants JSONB;`}
                   </td>
                   <td>
                     <strong>{product.name}</strong>
+                    {minOrderQty > 1 && (
+                      <span style={{ display: 'inline-block', fontSize: '0.72rem', color: '#92400e', background: '#fef3c7', padding: '1px 6px', borderRadius: '4px', marginTop: '3px', fontWeight: '600', border: '1px solid #fde68a' }}>
+                        🧁 Min: {minOrderQty} pcs
+                      </span>
+                    )}
                     {product.piece_count && (
                       <span style={{ display: 'block', fontSize: '0.75rem', color: '#666', marginTop: '2px' }}>
                         📦 {product.piece_count}
@@ -516,6 +551,9 @@ ADD COLUMN IF NOT EXISTS quantity_variants JSONB;`}
                       } else {
                         setHasFlourChoice(false);
                       }
+                      if (val === 'cupcakes') {
+                        if (!minOrder || minOrder === 1) setMinOrder(3);
+                      }
                     }} 
                     style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
                   >
@@ -525,6 +563,23 @@ ADD COLUMN IF NOT EXISTS quantity_variants JSONB;`}
                     <option value="cupcakes">Cupcakes</option>
                     <option value="specials">Specials</option>
                   </select>
+                </div>
+
+                <div className="form-group" style={{ flex: 1, minWidth: '130px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span>🧁</span> Min. Order Qty
+                  </label>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    step="1" 
+                    value={minOrder} 
+                    onChange={e => setMinOrder(Math.max(1, parseInt(e.target.value, 10) || 1))} 
+                    placeholder="e.g. 3" 
+                  />
+                  <small style={{ fontSize: '0.72rem', color: '#666', marginTop: '3px', display: 'block' }}>
+                    Min. pieces required (e.g. 3 for cupcakes)
+                  </small>
                 </div>
 
                 <div className="form-group" style={{ flex: 1.2, minWidth: '180px' }}>
